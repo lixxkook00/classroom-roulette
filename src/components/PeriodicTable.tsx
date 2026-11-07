@@ -2,7 +2,7 @@ import { memo, useEffect, useState, type CSSProperties, type PointerEvent, type 
 import { ELEMENTS, type Element } from '../data/elements'
 import { useI18n } from '../i18n'
 
-export type CellState = 'off' | 'on' | 'tested' | 'absent' | 'glow' | 'trail' | 'picked' | 'mine'
+export type CellState = 'off' | 'on' | 'tested' | 'absent' | 'glow' | 'trail' | 'picked' | 'mine' | 'dim'
 
 export interface Owner {
   order: number
@@ -13,12 +13,14 @@ export interface Owner {
 interface Props {
   /** Visual state for each atomic number. Missing = 'off'. */
   states: Record<number, CellState>
-  /** Student who owns each element (missing = nobody). */
-  owners: Record<number, Owner>
+  /** Student who owns each element (missing = nobody). Leave out on screens without students. */
+  owners?: Record<number, Owner>
   /** Tooltips are hidden while the wheel is spinning. */
   showTips: boolean
   /** Shown in the empty gap at the top of the table (rows 1–3, groups 3–12). */
   children?: ReactNode
+  /** Makes every element a button (smart periodic table). */
+  onPick?: (z: number) => void
 }
 
 interface Hover {
@@ -28,13 +30,11 @@ interface Hover {
 
 const TIP_W = 290
 
-function Tooltip({ el, rect, owner }: Hover & { owner?: Owner }) {
+function Tooltip({ el, rect, owner, showOwner }: Hover & { owner?: Owner; showOwner: boolean }) {
   const { t, elName, catLabel, groupShort } = useI18n()
   const below = rect.top < 250
   const left = Math.min(Math.max(rect.left + rect.width / 2, TIP_W / 2 + 8), window.innerWidth - TIP_W / 2 - 8)
-  const style = below
-    ? { left, top: rect.bottom + 10 }
-    : { left, top: rect.top - 10 }
+  const style = below ? { left, top: rect.bottom + 10 } : { left, top: rect.top - 10 }
 
   return (
     <div className={`etip${below ? ' etip--below' : ''}`} style={style} role="tooltip">
@@ -62,19 +62,21 @@ function Tooltip({ el, rect, owner }: Hover & { owner?: Owner }) {
           <dd>{groupShort(el)}</dd>
         </div>
       </dl>
-      <div className="etip__owner">
-        {owner ? (
-          <>
-            <span className="etip__student">
-              #{owner.order} · {owner.name}
-            </span>
-            {owner.status === 'tested' && <span className="badge">{t('tipTested')}</span>}
-            {owner.status === 'absent' && <span className="badge">{t('tipAbsent')}</span>}
-          </>
-        ) : (
-          <span className="muted">{t('tipNoStudent')}</span>
-        )}
-      </div>
+      {showOwner && (
+        <div className="etip__owner">
+          {owner ? (
+            <>
+              <span className="etip__student">
+                #{owner.order} · {owner.name}
+              </span>
+              {owner.status === 'tested' && <span className="badge">{t('tipTested')}</span>}
+              {owner.status === 'absent' && <span className="badge">{t('tipAbsent')}</span>}
+            </>
+          ) : (
+            <span className="muted">{t('tipNoStudent')}</span>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -83,8 +85,8 @@ function Tooltip({ el, rect, owner }: Hover & { owner?: Owner }) {
 const cellStyle = (el: Element): CSSProperties =>
   ({ gridRow: el.row, gridColumn: el.col, '--d': `${Math.round((el.col + el.row * 1.6) * 16)}ms` }) as CSSProperties
 
-function PeriodicTableImpl({ states, owners, showTips, children }: Props) {
-  const { t } = useI18n()
+function PeriodicTableImpl({ states, owners, showTips, children, onPick }: Props) {
+  const { t, elName } = useI18n()
   const [hover, setHover] = useState<Hover | null>(null)
   // Cells fly in once when the table appears (mode switch, class switch, page load).
   const [entering, setEntering] = useState(true)
@@ -103,16 +105,39 @@ function PeriodicTableImpl({ states, owners, showTips, children }: Props) {
 
   return (
     <>
-      <div className={`ptable${entering ? ' ptable--enter' : ''}`} role="img" aria-label={t('tableAria')} onPointerOver={onOver} onPointerLeave={() => setHover(null)}>
+      <div
+        className={`ptable${entering ? ' ptable--enter' : ''}`}
+        role={onPick ? 'group' : 'img'}
+        aria-label={onPick ? t('exploreTitle') : t('tableAria')}
+        onPointerOver={onOver}
+        onPointerLeave={() => setHover(null)}
+      >
         {ELEMENTS.map((el) => {
           const state = states[el.z] ?? 'off'
           const classes = ['cell', `cell--${state}`]
-          if (state === 'on' || state === 'trail' || state === 'mine') classes.push(`cat--${el.category}`)
+          if (state === 'on' || state === 'trail' || state === 'mine' || state === 'dim') classes.push(`cat--${el.category}`)
           if (showTips && hover?.el.z === el.z) classes.push('cell--hover')
-          return (
-            <div key={el.z} data-z={el.z} className={classes.join(' ')} style={cellStyle(el)}>
+          const inner = (
+            <>
               <span className="cell__num">{el.z}</span>
               <span className="cell__sym">{el.symbol}</span>
+            </>
+          )
+          return onPick ? (
+            <button
+              key={el.z}
+              type="button"
+              data-z={el.z}
+              className={`${classes.join(' ')} cell--btn`}
+              style={cellStyle(el)}
+              aria-label={`${el.z} ${el.symbol} ${elName(el)}`}
+              onClick={() => onPick(el.z)}
+            >
+              {inner}
+            </button>
+          ) : (
+            <div key={el.z} data-z={el.z} className={classes.join(' ')} style={cellStyle(el)}>
+              {inner}
             </div>
           )
         })}
@@ -124,7 +149,7 @@ function PeriodicTableImpl({ states, owners, showTips, children }: Props) {
           <span className="cell__sym">89–103</span>
         </div>
       </div>
-      {showTips && hover && <Tooltip key={hover.el.z} {...hover} owner={owners[hover.el.z]} />}
+      {showTips && hover && <Tooltip key={hover.el.z} {...hover} owner={owners?.[hover.el.z]} showOwner={!!owners} />}
     </>
   )
 }

@@ -54,6 +54,62 @@ export interface AppData {
   shareAll: boolean
   /** 'table': glow runs across the periodic table. 'card': mystery card revealed clue by clue. */
   mode: SpinMode
+  /** Teacher-made element lists for "Đoán nguyên tố". */
+  elementSets: ElementSet[]
+  /** Teacher-made question lists shown after a student is picked. */
+  questionSets: QuestionSet[]
+  /** Question set used on "Trả lời câu hỏi" (null = no questions). */
+  activeQuestionSetId: string | null
+  /** The running question round of each class (key = class id). */
+  rounds: Record<string, QuestionRound>
+}
+
+export interface RoundResult {
+  studentId: string
+  studentName: string
+  questionId: string
+  questionText: string
+  correct: boolean
+  /** ISO time */
+  at: string
+}
+
+/** A round: every question of the set is asked once; answered questions leave the round. */
+export interface QuestionRound {
+  setId: string
+  startedAt: string
+  /** Questions already answered in this round. */
+  used: string[]
+  results: RoundResult[]
+}
+
+export type MediaKind = 'audio' | 'video' | 'youtube'
+
+export interface QuestionMedia {
+  kind: MediaKind
+  /** audio/video: id of the file in IndexedDB (see media.ts). youtube: the link. */
+  ref: string
+  /** Original file name, shown in the editor. */
+  name?: string
+}
+
+export interface Question {
+  id: string
+  text: string
+  media?: QuestionMedia
+}
+
+export interface QuestionSet {
+  id: string
+  name: string
+  questions: Question[]
+}
+
+export interface ElementSet {
+  id: string
+  name: string
+  /** Atomic numbers, sorted. */
+  elements: number[]
 }
 
 export type SpinMode = 'table' | 'card'
@@ -85,7 +141,7 @@ function demoData(): AppData {
     'Dương Hải Phong', 'Trần Bảo Ngọc', 'Lý Gia Hân', 'Phan Đức Huy', 'Võ Minh Thư',
   ]
   const demo: ClassRoom = { id: uid(), name: 'Lớp mẫu (Demo)', students: names.map(newStudent) }
-  return { version: 1, classes: [demo], activeClassId: demo.id, skipTested: true, shareAll: true, mode: 'table' }
+  return { version: 1, classes: [demo], activeClassId: demo.id, skipTested: true, shareAll: true, mode: 'table', elementSets: [], questionSets: [], activeQuestionSetId: null, rounds: {} }
 }
 
 function isAppData(x: unknown): x is AppData {
@@ -119,7 +175,61 @@ export function sanitize(x: AppData): AppData {
   const activeClassId = classes.some((c) => c.id === x.activeClassId)
     ? x.activeClassId
     : (classes[0]?.id ?? null)
-  return { version: 1, classes, activeClassId, skipTested: x.skipTested !== false, shareAll: x.shareAll !== false, mode: x.mode === 'card' ? 'card' : 'table' }
+  return { version: 1, classes, activeClassId, skipTested: x.skipTested !== false, shareAll: x.shareAll !== false,
+    mode: x.mode === 'card' ? 'card' : 'table',
+    elementSets: Array.isArray(x.elementSets)
+      ? x.elementSets
+          .filter((s) => s && typeof s.id === 'string' && typeof s.name === 'string' && Array.isArray(s.elements))
+          .map((s) => ({ id: s.id, name: s.name, elements: cleanElements(s.elements) }))
+      : [],
+    questionSets: cleanQuestionSets(x.questionSets),
+    activeQuestionSetId:
+      typeof x.activeQuestionSetId === 'string' && Array.isArray(x.questionSets) && x.questionSets.some((q) => q?.id === x.activeQuestionSetId)
+        ? x.activeQuestionSetId
+        : null,
+    rounds: cleanRounds(x.rounds, classes.map((c) => c.id)),
+  }
+}
+
+function cleanRounds(raw: unknown, classIds: string[]): Record<string, QuestionRound> {
+  const out: Record<string, QuestionRound> = {}
+  if (!raw || typeof raw !== 'object') return out
+  for (const [cid, r] of Object.entries(raw as Record<string, QuestionRound>)) {
+    if (!classIds.includes(cid) || !r || typeof r.setId !== 'string' || !Array.isArray(r.used) || !Array.isArray(r.results)) continue
+    out[cid] = {
+      setId: r.setId,
+      startedAt: typeof r.startedAt === 'string' ? r.startedAt : new Date().toISOString(),
+      used: r.used.filter((u) => typeof u === 'string'),
+      results: r.results.filter((x) => x && typeof x.studentId === 'string' && typeof x.correct === 'boolean'),
+    }
+  }
+  return out
+}
+
+/** Valid, unique, sorted atomic numbers. */
+export function cleanElements(list: unknown[]): number[] {
+  return [...new Set(list.map(Number).filter((z) => Number.isInteger(z) && z >= 1 && z <= MAX_STUDENTS))].sort((a, b) => a - b)
+}
+
+function cleanQuestionSets(raw: unknown): QuestionSet[] {
+  if (!Array.isArray(raw)) return []
+  const kinds: MediaKind[] = ['audio', 'video', 'youtube']
+  return raw
+    .filter((s) => s && typeof s.id === 'string' && typeof s.name === 'string' && Array.isArray(s.questions))
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+      questions: (s.questions as Question[])
+        .filter((q) => q && typeof q.id === 'string' && typeof q.text === 'string')
+        .map((q) => ({
+          id: q.id,
+          text: q.text,
+          media:
+            q.media && kinds.includes(q.media.kind) && typeof q.media.ref === 'string'
+              ? { kind: q.media.kind, ref: q.media.ref, name: typeof q.media.name === 'string' ? q.media.name : undefined }
+              : undefined,
+        })),
+    }))
 }
 
 export function parseBackup(text: string): AppData | null {

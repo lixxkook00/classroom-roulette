@@ -2,9 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type 
 import { CATEGORY_ORDER, ELEMENTS } from '../data/elements'
 import { useI18n } from '../i18n'
 import { playTick, playWin } from '../sound'
-import { elementsOf, ownerOf, today, type AppData, type ClassRoom, type SpinMode } from '../store'
-import { isTypingSpace, prefersReducedMotion, randomInt, viewTransition } from '../util'
+import { elementsOf, ownerOf, today, type AppData, type ClassRoom, type QuestionRound, type RoundResult, type SpinMode } from '../store'
+import { isTypingSpace, nowIso, prefersReducedMotion, randomInt, viewTransition } from '../util'
 import { CardMode } from './CardMode'
+import { Celebration } from './Celebration'
+import { QuestionPicker } from './QuestionPicker'
+import { RoundSummary } from './RoundSummary'
+import { QuestionModal, type QuestionInfo } from './QuestionStage'
 import { ChalkSelect, Switch } from './controls'
 import { PeriodicTable, type CellState, type Owner } from './PeriodicTable'
 import { WinnerModal } from './WinnerModal'
@@ -14,6 +18,7 @@ interface Props {
   setData: Dispatch<SetStateAction<AppData>>
   updateClass: (id: string, fn: (c: ClassRoom) => ClassRoom) => void
   onManage: () => void
+  onManageQuestions: () => void
 }
 
 type Phase = 'idle' | 'spinning' | 'landed'
@@ -29,7 +34,7 @@ interface Plan {
 
 const SOUND_KEY = 'element-roulette:sound'
 
-export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
+export function SpinScreen({ data, setData, updateClass, onManage, onManageQuestions }: Props) {
   const { t, locale, elName, catLabel } = useI18n()
   const cls = data.classes.find((c) => c.id === data.activeClassId) ?? null
   const students = useMemo(() => cls?.students ?? [], [cls])
@@ -42,6 +47,13 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
   const [now] = useState(() => new Date())
   const [cardBusy, setCardBusy] = useState(false)
+  const [questionId, setQuestionId] = useState<string | null>(null)
+  // Mystery-card mode shows the question in its own popup.
+  const [cardQuestion, setCardQuestion] = useState<{ index: number; z: number } | null>(null)
+  const [celebrate, setCelebrate] = useState<{ kind: 'correct' | 'wrong'; name: string; left: number } | null>(null)
+  const [summary, setSummary] = useState<{ round: QuestionRound; setName: string; remaining: number } | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<number | undefined>(undefined)
   const mode = data.mode
   const [sound, setSound] = useState(() => {
     try {
@@ -95,7 +107,12 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
   )
 
   /** Every element owned by an eligible student — what the glow runs across. */
-  const eligibleElements = useMemo(() => eligible.flatMap((i) => elementsOf(i, count, shareAll).map((el) => el.z)), [eligible, count, shareAll])
+  /**
+   * Who the glow runs over: everyone who is here today — including students tested last time,
+   * so nobody can relax. Only `eligible` students can actually be picked.
+   */
+  const present = useMemo(() => students.map((s, i) => ({ s, i })).filter(({ s }) => !absent.has(s.id)).map(({ i }) => i), [students, absent])
+  const glowElements = useMemo(() => present.flatMap((i) => elementsOf(i, count, shareAll).map((el) => el.z)), [present, count, shareAll])
 
   const land = useCallback((z: number) => {
     plan.current = null
@@ -143,7 +160,7 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
     const winner = eligible[randomInt(eligible.length)]
     const owned = elementsOf(winner, count, shareAll)
     plan.current = {
-      pool: eligibleElements,
+      pool: glowElements,
       final: owned[randomInt(owned.length)].z,
       start: performance.now(),
       duration: prefersReducedMotion() ? 1200 : 4200,
@@ -153,9 +170,10 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
     trailRef.current = []
     setPicked(null)
     setModalOpen(false)
+    setQuestionId(null)
     setPhase('spinning')
     tick()
-  }, [eligible, eligibleElements, count, shareAll, tick])
+  }, [eligible, glowElements, count, shareAll, tick])
 
   const stopEarly = useCallback(() => {
     if (!plan.current) return
@@ -184,7 +202,8 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
       const i = ownerOf(el.z, count, shareAll)
       if (i === null) continue
       const st = students[i]
-      s[el.z] = absent.has(st.id) ? 'absent' : data.skipTested && st.tested ? 'tested' : 'on'
+      // Tested students look exactly like everyone else — they're just quietly left out of the draw.
+      s[el.z] = absent.has(st.id) ? 'absent' : 'on'
     }
     trail.forEach((z) => (s[z] = 'trail'))
     if (current !== null) s[current] = 'glow'
@@ -193,7 +212,7 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
       s[picked] = 'picked'
     }
     return s
-  }, [students, count, shareAll, absent, data.skipTested, trail, current, picked, pickedIndex])
+  }, [students, count, shareAll, absent, trail, current, picked, pickedIndex])
 
   const owners = useMemo(() => {
     const o: Record<number, Owner> = {}
@@ -204,7 +223,7 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
       o[el.z] = {
         order: i + 1,
         name: st.name,
-        status: absent.has(st.id) ? 'absent' : st.tested ? 'tested' : 'on',
+        status: absent.has(st.id) ? 'absent' : 'on',
       }
     }
     return o
@@ -219,6 +238,112 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
   const pickedElement = picked !== null ? ELEMENTS[picked - 1] : undefined
 
   const closeModal = useCallback(() => setModalOpen(false), [])
+
+  /* ---------- Questions & rounds ---------- */
+  const qset = data.questionSets.find((s) => s.id === data.activeQuestionSetId && s.questions.length > 0) ?? null
+  const storedRound = cls ? data.rounds[cls.id] : undefined
+  /** The running round for this class and the chosen set. */
+  const round = storedRound && qset && storedRound.setId === qset.id ? storedRound : null
+  const usedIds = new Set(round?.used ?? [])
+  const remainingQs = qset ? qset.questions.filter((q) => !usedIds.has(q.id)) : []
+
+  const showToast = (msg: string) => {
+    setToast(msg)
+    window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(null), 2600)
+  }
+
+  const startRound = (announce = true) => {
+    if (!cls || !qset) return
+    const r: QuestionRound = { setId: qset.id, startedAt: nowIso(), used: [], results: [] }
+    setData((d) => ({ ...d, rounds: { ...d.rounds, [cls.id]: r } }))
+    setQuestionId(null)
+    if (announce) showToast(t('roundStarted', { n: qset.questions.length }))
+    return r
+  }
+
+  const dropRound = () => {
+    if (!cls) return
+    setData((d) => {
+      const rounds = { ...d.rounds }
+      delete rounds[cls.id]
+      return { ...d, rounds }
+    })
+    setQuestionId(null)
+  }
+
+  /** Ends the round: shows the results, then clears it. */
+  const endRound = () => {
+    if (!round || !qset) return
+    if (round.results.length > 0 && !window.confirm(t('confirmEndRound'))) return
+    setSummary({ round, setName: qset.name, remaining: remainingQs.length })
+    dropRound()
+  }
+
+  /** Draws a question that hasn't been answered in this round (starting a round if needed). */
+  const pickQuestion = () => {
+    if (!qset) return
+    if (!round) startRound(false)
+    const used = round ? usedIds : new Set<string>()
+    let pool = qset.questions.filter((q) => !used.has(q.id) && q.id !== questionId)
+    if (pool.length === 0) pool = qset.questions.filter((q) => !used.has(q.id))
+    if (pool.length === 0) return
+    setQuestionId(pool[randomInt(pool.length)].id)
+  }
+
+  const questionInfo: QuestionInfo | null = (() => {
+    if (!qset || !questionId) return null
+    const i = qset.questions.findIndex((q) => q.id === questionId)
+    return i < 0 ? null : { question: qset.questions[i], index: qset.questions.length - remainingQs.length + 1, total: qset.questions.length }
+  })()
+  const canChangeQuestion = remainingQs.filter((q) => q.id !== questionId).length > 0
+
+  const setQuestionSet = (id: string | null) => {
+    if (round && round.results.length > 0 && id !== qset?.id && !window.confirm(t('confirmChangeSet'))) return
+    if (round && id !== qset?.id) {
+      setSummary({ round, setName: qset!.name, remaining: remainingQs.length })
+      dropRound()
+    }
+    setQuestionId(null)
+    setData((d) => ({ ...d, activeQuestionSetId: id }))
+  }
+
+  /** Correct / wrong: the question leaves the round, the student is marked, then the show. */
+  const grade = (studentIndex: number, correct: boolean) => {
+    const st = students[studentIndex]
+    const q = questionInfo?.question
+    if (!cls || !st || !q || !qset) return
+    const result: RoundResult = { studentId: st.id, studentName: st.name, questionId: q.id, questionText: q.text || '—', correct, at: nowIso() }
+    const base = round ?? { setId: qset.id, startedAt: nowIso(), used: [], results: [] }
+    const next: QuestionRound = { ...base, used: [...base.used.filter((u) => u !== q.id), q.id], results: [...base.results, result] }
+    setData((d) => ({
+      ...d,
+      rounds: { ...d.rounds, [cls.id]: next },
+      classes: d.classes.map((c) => (c.id === cls.id ? { ...c, students: c.students.map((s) => (s.id === st.id ? { ...s, tested: true, lastTestedAt: today() } : s)) } : c)),
+    }))
+    setQuestionId(null)
+    setModalOpen(false)
+    setCardQuestion(null)
+    if (mode === 'table') resetSpin()
+    setCelebrate({ kind: correct ? 'correct' : 'wrong', name: st.name, left: qset.questions.filter((x) => !next.used.includes(x.id)).length })
+  }
+
+  const afterCelebrate = () => {
+    const c = celebrate
+    setCelebrate(null)
+    if (!c || !qset) return
+    if (c.left === 0 && cls && data.rounds[cls.id]) {
+      // Every question has been answered: show the results.
+      setSummary({ round: data.rounds[cls.id], setName: qset.name, remaining: 0 })
+      dropRound()
+    } else if (c.left > 0) showToast(t('roundToast', { n: c.left }))
+  }
+
+  const openCardQuestion = (index: number, z: number) =>
+    viewTransition('question', () => {
+      if (!questionId) pickQuestion()
+      setCardQuestion({ index, z })
+    })
 
   const markTestedId = (id: string) => {
     if (!cls) return
@@ -265,6 +390,19 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
     month: '2-digit',
   }).format(now)
   const busy = phase === 'spinning' || cardBusy
+
+  const picker = (
+    <QuestionPicker
+      sets={data.questionSets}
+      activeId={qset?.id ?? null}
+      onChange={setQuestionSet}
+      onManage={onManageQuestions}
+      disabled={busy}
+      round={qset ? { active: !!round, left: remainingQs.length, total: qset.questions.length } : null}
+      onStartRound={() => startRound()}
+      onEndRound={endRound}
+    />
+  )
   const allDone = !!cls && students.length > 0 && eligible.length === 0 && phase !== 'spinning'
 
   const switches = (
@@ -346,14 +484,6 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
               {sound ? <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /> : <path d="M17 9l5 6M22 9l-5 6" />}
             </svg>
           </button>
-          <button type="button" className="link-btn manage-link" onClick={onManage} disabled={busy} aria-label={t('manageClasses')} title={t('manageClasses')}>
-            <svg className="manage-link__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            <span className="manage-link__text">{t('manageClasses')}</span>
-          </button>
         </div>
       </header>
 
@@ -362,6 +492,7 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
           <CardMode
             students={students}
             eligible={eligible}
+            present={present}
             shareAll={shareAll}
             sound={sound}
             className={cls.name}
@@ -370,7 +501,14 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
             onMarkTested={markTestedId}
             onAbsent={(id) => setAbsent((a) => new Set(a).add(id))}
             onNewRound={startNewRound}
-            onBusyChange={setCardBusy}
+            onBusyChange={(b) => {
+              setCardBusy(b)
+              if (b) setQuestionId(null)
+            }}
+            picker={picker}
+            hasQuestions={!!qset && remainingQs.length > 0}
+            onShowQuestion={openCardQuestion}
+            paused={cardQuestion !== null}
           />
         ) : (
           <>
@@ -400,6 +538,7 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
 
             {cls && (
               <div className="spin-bar">
+                {picker}
                 <div className="spin-bar__status" aria-live="polite">
                   {students.length === 0 ? (
                     <div className="row row--wrap">
@@ -470,11 +609,55 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
           order={pickedIndex + 1}
           studentName={pickedStudent.name}
           className={cls.name}
+          question={questionInfo}
+          hasQuestions={!!qset && remainingQs.length > 0}
+          onShowQuestion={() => !questionId && pickQuestion()}
+          onAnotherQuestion={pickQuestion}
+          canChangeQuestion={canChangeQuestion}
+          onCorrect={() => grade(pickedIndex, true)}
+          onWrong={() => grade(pickedIndex, false)}
           onMarkTested={markTested}
           onSpinAgain={spin}
           onAbsent={markAbsent}
           onClose={closeModal}
         />
+      )}
+
+      {cardQuestion && cls && questionInfo && students[cardQuestion.index] && (
+        <QuestionModal
+          element={ELEMENTS[cardQuestion.z - 1]}
+          order={cardQuestion.index + 1}
+          studentName={students[cardQuestion.index].name}
+          className={cls.name}
+          info={questionInfo}
+          canChangeQuestion={canChangeQuestion}
+          onCorrect={() => grade(cardQuestion.index, true)}
+          onWrong={() => grade(cardQuestion.index, false)}
+          onAnother={() => viewTransition('question', pickQuestion)}
+          onClose={() => viewTransition('question', () => setCardQuestion(null))}
+        />
+      )}
+
+      {celebrate && <Celebration kind={celebrate.kind} studentName={celebrate.name} sound={sound} onDone={afterCelebrate} />}
+
+      {summary && cls && (
+        <RoundSummary
+          round={summary.round}
+          setName={summary.setName}
+          className={cls.name}
+          remaining={summary.remaining}
+          onClose={() => setSummary(null)}
+          onNewRound={() => {
+            setSummary(null)
+            startRound()
+          }}
+        />
+      )}
+
+      {toast && (
+        <div className="toast" role="status">
+          {toast}
+        </div>
       )}
     </div>
   )

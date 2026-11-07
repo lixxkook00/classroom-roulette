@@ -1,7 +1,7 @@
 # Element Roulette 🧪
 
-A chalkboard-style periodic table that picks which student explains the last lesson
-(*Hôm nay ai trả bài?*). Students get elements in list order, in one of two modes
+A chalkboard-style periodic table that picks which student answers the question
+(*Ai sẽ trả lời câu hỏi?*). Students get elements in list order, in one of two modes
 (a switch on the spin screen):
 
 - **Use the whole table** (default): the table is shared out so every student gets the
@@ -24,6 +24,40 @@ fun fact about their element.
   can guess along; values still rolling only show options that fit the clues already locked.
   The finished card shows the fun fact with *Mark as tested* / *Absent*. The winner is drawn up
   front exactly like table mode, so the reveal never changes anyone's chance.
+- **Teacher / student access**: a device that hasn't been unlocked only shows *Bảng tuần hoàn* and
+  *Đoán nguyên tố* (what students open from the QR code). Tap **Giáo viên**, enter the teacher
+  password once and that device stays unlocked; **Khóa** switches back to student view.
+- **QR for students**: on *Bảng tuần hoàn* and *Đoán nguyên tố* (teacher only) — students scan it
+  and get the same page on their phones. For a custom element set the link carries the set itself.
+- **Question sets** (*Lớp học → Bộ câu hỏi*): write questions with optional audio (mp3), video
+  (mp4) or a YouTube link. On *Trả lời câu hỏi* the floating **Câu hỏi** button (bottom-left)
+  picks the set; after a student is picked, **Hiện câu hỏi** turns the winner card into the
+  question — the name glides to the top-left, and for video / YouTube the popup grows to almost
+  full screen. *Câu khác* draws another question; questions don't repeat until the set is used up.
+  Audio/video files are stored in the browser (IndexedDB) on that computer only; the backup file
+  keeps the text and YouTube links.
+- **Question rounds**: next to the *Câu hỏi* button, **Bắt đầu vòng** starts a round with the chosen
+  set. The question view has **✓ Trả lời đúng** / **✗ Trả lời sai**: grading marks the student,
+  takes that question out of the round (the next spin only draws from the questions left) and
+  plays fireworks for a right answer or a smoke-and-bubbles "fizzle" for a wrong one. *Câu khác*
+  swaps the question without using it up. **Kết thúc vòng** (or answering the last question)
+  shows the results — right/wrong counts, who answered what — with a CSV download. Rounds are
+  saved, so a refresh doesn't lose them.
+- **Element sets** (*Lớp học → Bộ nguyên tố*): click elements on the table (or a whole group from
+  the colour key, or "1–20") to build your own lists for *Đoán nguyên tố*.
+- **Tabs**: *Trả lời câu hỏi* · *Bảng tuần hoàn* · *Đoán nguyên tố* · *Lớp học*. Each tab has its own
+  link (`/#/table`, `/#/guess`, `/#/classes`), so students can be sent straight to one.
+- **Smart periodic table** (*Bảng tuần hoàn thông minh*, for students): click any element for
+  its name with IPA (phiên âm) and an English pronunciation button — UK or US accent, normal or
+  slow (browser voices), an animated Bohr atom with p⁺/n⁰/e⁻ and electrons per shell,
+  atomic number, mass, period/group, state at 25 °C, electron configuration, fun fact and key
+  equations (with conditions like t°, xt). Search by symbol, English or Vietnamese name or
+  number (accents optional); click the colour key to filter by group; ← → moves between elements.
+- **Guess the element** (*Đoán nguyên tố*): 9 clues from hard to easy — type, state, period,
+  group, electron configuration, mass, fun fact (name hidden), atomic number, first letter.
+  10 points minus one per clue; a wrong guess opens the next clue. Guesses accept symbol,
+  English/Vietnamese name (with or without accents) or number. Four levels (1–20, 1–36,
+  1–86, all). Space = next clue.
 - **Winner card**: element tile, student name, a fun fact, all of the student's elements,
   and three actions:
   *Mark as tested*, *Spin again*, *Absent — skip* (skips them for the rest of the session).
@@ -55,9 +89,21 @@ fun fact about their element.
 ## Run it locally
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
+
+## Teacher password
+
+Default: **`thayqui2026`** (capitals, spaces and accents don't matter — "Thầy Quí 2026" works too).
+
+Change it for the live site in Vercel → *Project → Settings → Environment Variables*:
+add `VITE_TEACHER_PIN` = your password, then redeploy. Locally, put `VITE_TEACHER_PIN=...` in a
+`.env.local` file. Only a hash of the password is built into the app, and changing it locks every
+device again.
+
+Note: this keeps students out of the teacher screens on their own phones; it is not bank-grade
+security (the class lists only ever live in the teacher's own browser anyway).
 
 ## Deploy to Vercel
 
@@ -74,6 +120,11 @@ so no rewrite rules are needed either.
 src/
   data/elements.ts          118 elements: symbol, name, mass, group, position, fun fact (EN)
   data/facts.vi.ts          Vietnamese fun facts and traditional names
+  data/chem.ts              electron configurations, states, equations, guess matching
+  speech.ts                 English pronunciation, UK / US voices (Web Speech API)
+  data/pronunciation.ts     IPA (UK + US) for all 118 names
+  pin.ts                    teacher password hashing (shared with vite.config.ts)
+  media.ts                  IndexedDB storage for question audio/video, YouTube link parsing
   i18n.tsx                  VI/EN strings, language toggle
   store.ts                  classes & students, saved to localStorage
   smartImport.ts            turns pasted sheets / lists / CSV into clean names
@@ -83,9 +134,32 @@ src/
     PeriodicTable.tsx       the table grid
     SpinScreen.tsx          spin animation, Space shortcut, landed banner
     WinnerModal.tsx         the fun-fact popup
+    ExploreScreen.tsx       smart periodic table tab
+    ElementDetail.tsx       element card: facts, pronunciation, equations
+    GuessScreen.tsx         guess-the-element game
+    chemText.tsx            formulas with subscripts, configurations, equations
+    BohrAtom.tsx            animated Bohr model
+    ElementSetsPanel.tsx    teacher's element sets editor
+    QrDialog.tsx            QR code for students
+    PinDialog.tsx           teacher password prompt
+    QuestionSetsPanel.tsx   question-set editor (text, mp3, mp4, YouTube)
+    QuestionPicker.tsx      floating question-set button on the spin screen
+    QuestionStage.tsx       the question view (name top-left, question, media)
+    MediaView.tsx           audio / video / YouTube player
+    Celebration.tsx         fireworks (correct) / fizzle (wrong) overlay
+    RoundSummary.tsx        end-of-round results + CSV
     CardMode.tsx            mystery card: slot-machine reveal, clue by clue
     ClassesScreen.tsx       class & student manager
     ImportDialog.tsx        paste / drop a class list with live preview
     controls.tsx            chalk dropdown and switch
   index.css                 chalkboard theme
 ```
+
+## Checking the chemistry data
+
+```bash
+npx tsx scripts/check-chem.ts
+```
+
+Checks that every electron configuration and shell list adds up to Z electrons, that every
+equation is balanced, that all 118 elements have IPA, and that typed guesses ("Fe", "sắt", "sat", "iron", "26") resolve correctly.

@@ -33,7 +33,8 @@ export function isTypingSpace(e: KeyboardEvent) {
   return !!t.closest('[role="listbox"], [role="dialog"]')
 }
 
-type DocWithVT = Document & { startViewTransition?: (cb: () => void) => unknown }
+type VT = { ready: Promise<void>; finished: Promise<void>; updateCallbackDone: Promise<void> }
+type DocWithVT = Document & { startViewTransition?: (cb: () => void) => VT }
 
 export const supportsViewTransitions = typeof document !== 'undefined' && 'startViewTransition' in document
 
@@ -45,5 +46,17 @@ export function viewTransition(kind: string, apply: () => void) {
   const doc = document as DocWithVT
   if (!doc.startViewTransition || prefersReducedMotion()) return apply()
   document.documentElement.dataset.nav = kind
-  doc.startViewTransition(() => flushSync(apply))
+  const vt = doc.startViewTransition(() => flushSync(apply))
+  // A newer transition may cut this one short — that's fine, don't report it as an error.
+  vt.ready.catch(() => {})
+  vt.finished.catch(() => {})
+  vt.updateCallbackDone.catch(() => {})
 }
+
+/** Link to a student tab on this same site, e.g. studentUrl('table'). */
+export function studentUrl(path: string): string {
+  return `${window.location.origin}${window.location.pathname}#/${path}`
+}
+
+/** Current time as an ISO string (kept out of render code). */
+export const nowIso = () => new Date().toISOString()

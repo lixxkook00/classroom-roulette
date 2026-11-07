@@ -20,6 +20,8 @@ interface Props {
   students: Student[]
   /** Indices of students who can be picked. */
   eligible: number[]
+  /** Students shown while rolling (everyone here today, tested or not — keeps the suspense). */
+  present: number[]
   shareAll: boolean
   sound: boolean
   className: string
@@ -30,6 +32,12 @@ interface Props {
   onAbsent: (studentId: string) => void
   onNewRound: () => void
   onBusyChange: (busy: boolean) => void
+  /** Floating question-set button, shown at the left of the bottom bar. */
+  picker: ReactNode
+  hasQuestions: boolean
+  onShowQuestion: (studentIndex: number, z: number) => void
+  /** True while a question popup is open: Space must not re-roll the card. */
+  paused: boolean
 }
 
 type Phase = 'idle' | 'rolling' | 'done'
@@ -63,7 +71,24 @@ function Slot({ label, value, locked, rolling, colorClass }: { label: string; va
   )
 }
 
-export function CardMode({ students, eligible, shareAll, sound, className, switches, allDone, onMarkTested, onAbsent, onNewRound, onBusyChange }: Props) {
+export function CardMode({
+  students,
+  eligible,
+  present,
+  shareAll,
+  sound,
+  className,
+  switches,
+  allDone,
+  onMarkTested,
+  onAbsent,
+  onNewRound,
+  onBusyChange,
+  picker,
+  hasQuestions,
+  onShowQuestion,
+  paused,
+}: Props) {
   const { t, elName, elFact, catLabel, groupShort } = useI18n()
   const count = students.length
 
@@ -72,7 +97,6 @@ export function CardMode({ students, eligible, shareAll, sound, className, switc
   const [shownZ, setShownZ] = useState<number | null>(null)
   const [shownStudent, setShownStudent] = useState<number | null>(null)
   const [final, setFinal] = useState<{ index: number; z: number } | null>(null)
-  const [marked, setMarked] = useState(false)
 
   const timer = useRef<number | undefined>(undefined)
   const start = useRef(0)
@@ -90,8 +114,8 @@ export function CardMode({ students, eligible, shareAll, sound, className, switc
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
-  /** Every element owned by an eligible student. */
-  const pool = useMemo(() => eligible.flatMap((i) => elementsOf(i, count, shareAll).map((el) => el.z)), [eligible, count, shareAll])
+  /** Elements shown while rolling: everyone present, so tested students still flash by. */
+  const pool = useMemo(() => present.flatMap((i) => elementsOf(i, count, shareAll).map((el) => el.z)), [present, count, shareAll])
 
   const finish = useCallback(() => {
     const f = finalRef.current
@@ -129,7 +153,7 @@ export function CardMode({ students, eligible, shareAll, sound, className, switc
     } else {
       zRef.current = f.z
     }
-    stuRef.current = pickOther(eligible, stuRef.current)
+    stuRef.current = pickOther(present, stuRef.current)
     setShownZ(zRef.current)
     setShownStudent(stuRef.current)
     if (soundRef.current) playTick()
@@ -137,7 +161,7 @@ export function CardMode({ students, eligible, shareAll, sound, className, switc
     const total = lockTimes.current[STEPS - 1]
     const delay = 55 + 240 * Math.pow(Math.min(1, elapsed / total), 2)
     timer.current = window.setTimeout(() => tickRef.current(), delay)
-  }, [pool, eligible, finish])
+  }, [pool, present, finish])
 
   useEffect(() => {
     tickRef.current = tick
@@ -155,7 +179,6 @@ export function CardMode({ students, eligible, shareAll, sound, className, switc
     lockTimes.current = LOCK_TIMES.map((ms) => ms * scale)
     lockedRef.current = 0
     setLocked(0)
-    setMarked(false)
     setPhase('rolling')
     onBusyChange(true)
     start.current = performance.now()
@@ -181,14 +204,14 @@ export function CardMode({ students, eligible, shareAll, sound, className, switc
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code !== 'Space' || isTypingSpace(e)) return
+      if (e.code !== 'Space' || paused || isTypingSpace(e)) return
       e.preventDefault()
       if (phase === 'rolling') hurry()
       else if (!allDone) roll()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [phase, allDone, roll, hurry])
+  }, [phase, allDone, paused, roll, hurry])
 
   const el: Element | null = shownZ !== null ? ELEMENTS[shownZ - 1] : null
   const student = shownStudent !== null ? students[shownStudent] : null
@@ -259,16 +282,20 @@ export function CardMode({ students, eligible, shareAll, sound, className, switc
                   <p>{elFact(winnerElement)}</p>
                 </div>
                 <div className="mcard__actions">
-                  {marked ? (
+                  {hasQuestions && final && (
+                    <button type="button" className="btn btn--solid btn--small btn--question" onClick={() => onShowQuestion(final.index, final.z)}>
+                      {t('showQuestion')} →
+                    </button>
+                  )}
+                  {winner.tested ? (
                     <span className="mcard__marked">✓ {t('markedTested')}</span>
                   ) : (
                     <>
                       <button
                         type="button"
-                        className="btn btn--solid btn--small"
+                        className={`btn btn--small${hasQuestions ? '' : ' btn--solid'}`}
                         onClick={() => {
                           onMarkTested(winner.id)
-                          setMarked(true)
                         }}
                       >
                         {t('markTested')}
@@ -295,6 +322,7 @@ export function CardMode({ students, eligible, shareAll, sound, className, switc
       </div>
 
       <div className="spin-bar">
+        {picker}
         <div className="spin-bar__status" aria-live="polite">
           {allDone ? (
             <div className="landed">
