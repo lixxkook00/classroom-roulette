@@ -2626,3 +2626,93 @@ html[data-nav='question']::view-transition-new(winner-box) { animation: q-in 0.4
 .switch--on .switch__icon { color: var(--yellow); }
 /* Both spin switches are icon-only — keep them side by side. */
 .spin-bar__switches { flex-direction: row !important; align-items: center; gap: 14px; }
+
+/* =====================================================================
+   Video / YouTube questions: everything else shrinks so the video is as big as possible
+   ===================================================================== */
+.overlay:has(> .winner--wide) { padding: 6px; }
+.winner--wide {
+  width: calc(100vw - 12px);
+  height: calc(100dvh - 12px);
+  max-width: none;
+  max-height: none;
+  padding: 8px 12px 10px;
+  border-width: 5px;
+  border-radius: 10px;
+}
+.winner--wide .winner__close { top: 6px; right: 8px; width: 36px; height: 36px; }
+.qstage--wide { gap: 6px; }
+.qstage--wide .qstage__who { gap: 10px; padding-right: 44px; min-height: 36px; }
+.qstage--wide .qstage__tile { width: 34px; font-size: 18px; border-width: 2px; border-radius: 6px; }
+.qstage--wide .qstage__tile small { display: none; }
+.qstage--wide .qstage__who-text { flex-direction: row; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.qstage--wide .qstage__name { font-size: clamp(20px, 2.8vh, 28px); }
+.qstage--wide .qstage__meta { font-size: 12px; }
+.qstage--wide .qstage__body {
+  padding: 6px;
+  gap: 6px;
+  border: none;
+  background: none;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+.qstage--wide .qstage__text,
+.qstage--wide .qstage__text--long {
+  flex: none;
+  max-height: 4.2em;
+  overflow-y: auto;
+  font-family: var(--body);
+  font-size: clamp(15px, 2.1vh, 22px);
+  line-height: 1.4;
+  text-align: left;
+}
+.qstage--wide .media--big { flex: 1 1 auto; min-height: 120px; border-radius: 8px; }
+.qstage--wide .media--audio { flex: none; padding: 6px 10px; }
+.qstage--wide .qstage__answer { flex: none; padding: 8px 14px; border-width: 2px; }
+.qstage--wide .qstage__answer-label { font-size: 17px; }
+.qstage--wide .qstage__answer p { margin-top: 2px; font-family: var(--body); font-size: clamp(15px, 2.2vh, 24px); max-height: 4.2em; overflow-y: auto; }
+/* An answer with its own video fills the space the question video had. */
+.qstage--wide .qstage__answer:has(.media--big) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+.qstage--wide .qstage__answer .media--big { min-height: 100px; }
+.qstage--wide .qstage__actions { flex: none; gap: 8px; }
+.qstage--wide .qstage__actions .btn { min-height: 40px; padding: 0 16px; font-size: 18px; border-width: 2px; }
+
+/* Answer media (non-video) in normal questions */
+.qstage__answer .media { margin-top: 8px; }
+
+/* Editor: the answer part is its own box */
+.qform__answer-label { margin-top: 10px; padding-top: 10px; border-top: 1.5px dashed rgba(143, 227, 192, 0.35); color: #8fe3c0; }
+
+/* ---- Compact question form: question | answer side by side ---- */
+.qeditor { gap: 8px; }
+.qeditor .class-head .chalk-input--big { font-size: 24px; min-height: 40px; }
+.qform { gap: 6px; padding: 10px 12px; }
+.qform__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; }
+.qform__col { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.qform__col--answer { padding-left: 16px; border-left: 1.5px dashed rgba(143, 227, 192, 0.35); }
+.qform__label { font-family: var(--hand); font-size: 18px; line-height: 1.1; }
+.qform__label--answer { color: #8fe3c0; }
+.qform .qform__text,
+.qform .qform__answer { min-height: 0; height: 52px; padding: 6px 10px; font-size: 15px; line-height: 1.35; resize: vertical; }
+.qform .qform__row { gap: 6px; }
+.qform .qform__row > .muted { display: none; }
+.qform .qform__row .seg__btn { height: 30px; min-width: 0; padding: 0 8px; font-size: 14px; }
+.qform .qform__row .btn--small { min-height: 30px; padding: 0 10px; font-size: 15px; }
+.qform .qform__link { min-height: 30px; height: 30px; padding: 0 8px; font-size: 13px; flex: 1 1 140px; }
+.qform .qform__file { font-size: 12px; max-width: 140px; }
+.qform .qform__warn { font-size: 12px; }
+.qform .qform__actions { margin-top: 2px; }
+.qform .qform__actions .btn--small { min-height: 34px; font-size: 17px; }
+.qeditor .qlist { min-height: 160px; }
+@media (max-width: 900px) {
+  .qform__grid { grid-template-columns: minmax(0, 1fr); }
+  .qform__col--answer { padding-left: 0; border-left: none; padding-top: 8px; border-top: 1.5px dashed rgba(143, 227, 192, 0.35); }
+}
+.qeditor .qlist li { padding: 6px 12px; gap: 8px; align-items: center; }
+.qeditor .qlist__n { font-size: 19px; }
+.qeditor .qlist__body { gap: 2px; }
+.qeditor .qlist__text { font-size: 15px; line-height: 1.35; }
+.qeditor .qlist__answer { font-size: 13px; }
+.qeditor .qlist .roster__actions { gap: 4px; }
+.qeditor .qlist .roster__actions .icon-btn { width: 32px; height: 32px; font-size: 15px; border-width: 1.5px; }
+.qeditor .class-head { gap: 8px; }

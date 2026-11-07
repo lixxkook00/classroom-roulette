@@ -149,9 +149,9 @@ function Tabs({ view, teacher, onTeacher, onLock }: { view: View; teacher: boole
   )
 }
 
-const SITE_NAME = { vi: 'Lớp Hóa học thầy Lê Quang Quí', en: 'Mr. Lê Quang Quí’s Chemistry Class' }
+const SITE_NAME = { vi: 'Lớp KHTN thầy Lê Quang Quí', en: 'Mr. Lê Quang Quí’s Natural Science Class' }
 
-/** Browser-tab title per tab, e.g. "Bảng tuần hoàn thông minh · Lớp Hóa học thầy Lê Quang Quí". */
+/** Browser-tab title per tab, e.g. "Bảng tuần hoàn thông minh · Lớp KHTN thầy Lê Quang Quí". */
 function useDocumentTitle(view: View) {
   const { t, lang } = useI18n()
   useEffect(() => {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Element } from '../data/elements'
 import { useI18n } from '../i18n'
 import type { Question } from '../store'
-import { isWide } from '../media'
+import { hasAnswerVideo, isWide } from '../media'
 import { playLock } from '../sound'
 import { MediaView } from './MediaView'
 
@@ -42,7 +42,12 @@ export function QuestionStage({ element, order, studentName, className, info, on
   const long = q.text.length > 160
   // Which question's answer is showing (so a new question starts hidden again).
   const [revealedFor, setRevealedFor] = useState<string | null>(null)
-  const revealed = !q.answer || revealedFor === q.id
+  const hasAnswer = !!(q.answer || q.answerMedia)
+  const showingAnswer = hasAnswer && revealedFor === q.id
+  const revealed = !hasAnswer || showingAnswer
+  const wide = isWide(q)
+  // When the answer is a video, it takes the question video's place so it can be big.
+  const hideQuestionMedia = showingAnswer && hasAnswerVideo(q)
   const answerRef = useRef<HTMLDivElement>(null)
   const checkRef = useRef<HTMLButtonElement>(null)
 
@@ -59,7 +64,7 @@ export function QuestionStage({ element, order, studentName, className, info, on
     setRevealedFor(q.id)
   }
   return (
-    <div className={`qstage${isWide(q) ? ' qstage--wide' : ''}`}>
+    <div className={`qstage${wide ? ' qstage--wide' : ''}${showingAnswer ? ' qstage--answered' : ''}`}>
       <header className="qstage__who">
         <span className={`qstage__tile cat--${element.category}`}>
           <small>{element.z}</small>
@@ -77,8 +82,8 @@ export function QuestionStage({ element, order, studentName, className, info, on
 
       <div className="qstage__body" key={q.id}>
         {q.text && <p className={`qstage__text${long ? ' qstage__text--long' : ''}`}>{q.text}</p>}
-        {q.media && <MediaView media={q.media} big={isWide(q)} />}
-        {q.answer && revealedFor === q.id && (
+        {q.media && !hideQuestionMedia && <MediaView media={q.media} big={wide && !showingAnswer} />}
+        {showingAnswer && (
           <div className="qstage__answer" ref={answerRef}>
             <span className="qstage__answer-label">
               <svg
@@ -96,7 +101,8 @@ export function QuestionStage({ element, order, studentName, className, info, on
               </svg>
               {t('answerLabel')}
             </span>
-            <p>{q.answer}</p>
+            {q.answer && <p>{q.answer}</p>}
+            {q.answerMedia && <MediaView media={q.answerMedia} big={hasAnswerVideo(q)} />}
           </div>
         )}
       </div>

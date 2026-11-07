@@ -1,7 +1,7 @@
 {
-  "name": "Lớp Hóa học thầy Lê Quang Quí",
-  "short_name": "Hóa thầy Quí",
-  "description": "Bảng tuần hoàn thông minh, trò chơi đoán nguyên tố và trả lời câu hỏi cùng cả lớp.",
+  "name": "Lớp Khoa học tự nhiên thầy Lê Quang Quí",
+  "short_name": "KHTN thầy Quí",
+  "description": "Học Khoa học tự nhiên vui hơn: trả lời câu hỏi cùng cả lớp, bảng tuần hoàn thông minh và trò chơi đoán nguyên tố.",
   "lang": "vi",
   "start_url": "/#/table",
   "scope": "/",

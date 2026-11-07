@@ -1,17 +1,15 @@
 import { useRef, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react'
 import { useI18n } from '../i18n'
-import { deleteMedia, putMedia, youTubeId } from '../media'
-import { uid, type AppData, type MediaKind, type Question, type QuestionMedia, type QuestionSet } from '../store'
+import { deleteMedia } from '../media'
+import { uid, type AppData, type Question, type QuestionMedia, type QuestionSet } from '../store'
+import { draftFrom, draftReady, emptyDraft, resolveDraft, type MediaDraft } from '../mediaDraft'
+import { MediaField } from './MediaField'
 import { MediaBadge, MediaView } from './MediaView'
 
 interface Props {
   data: AppData
   setData: Dispatch<SetStateAction<AppData>>
 }
-
-type Attach = 'none' | MediaKind
-
-const ACCEPT: Record<'audio' | 'video', string> = { audio: 'audio/*,.mp3,.m4a,.wav,.ogg', video: 'video/*,.mp4,.webm,.mov' }
 
 /** "Bộ câu hỏi": the teacher writes questions (text + optional mp3 / mp4 / YouTube). */
 export function QuestionSetsPanel({ data, setData }: Props) {
@@ -24,26 +22,23 @@ export function QuestionSetsPanel({ data, setData }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [text, setText] = useState('')
   const [answer, setAnswer] = useState('')
-  const [attach, setAttach] = useState<Attach>('none')
-  const [file, setFile] = useState<File | null>(null)
-  const [keptMedia, setKeptMedia] = useState<QuestionMedia | undefined>(undefined)
-  const [link, setLink] = useState('')
+  const [qMedia, setQMedia] = useState<MediaDraft>(emptyDraft)
+  const [aMedia, setAMedia] = useState<MediaDraft>(emptyDraft)
   const [busy, setBusy] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
   const textRef = useRef<HTMLTextAreaElement>(null)
 
   const updateSet = (id: string, fn: (s: QuestionSet) => QuestionSet) =>
     setData((d) => ({ ...d, questionSets: d.questionSets.map((s) => (s.id === id ? fn(s) : s)) }))
 
+  /** Removes a question's stored files (YouTube links have nothing to remove). */
+  const dropFiles = (...ms: (QuestionMedia | undefined)[]) => ms.forEach((m) => m && m.kind !== 'youtube' && void deleteMedia(m.ref))
+
   const resetForm = () => {
     setEditingId(null)
     setText('')
     setAnswer('')
-    setAttach('none')
-    setFile(null)
-    setKeptMedia(undefined)
-    setLink('')
-    if (fileRef.current) fileRef.current.value = ''
+    setQMedia(emptyDraft())
+    setAMedia(emptyDraft())
   }
 
   const createSet = () => {
@@ -55,7 +50,7 @@ export function QuestionSetsPanel({ data, setData }: Props) {
 
   const deleteSet = () => {
     if (!active || !window.confirm(t('confirmDeleteQSet', { name: active.name, n: active.questions.length }))) return
-    active.questions.forEach((q) => q.media && q.media.kind !== 'youtube' && void deleteMedia(q.media.ref))
+    active.questions.forEach((q) => dropFiles(q.media, q.answerMedia))
     const rest = sets.filter((s) => s.id !== active.id)
     setData((d) => ({
       ...d,
@@ -66,27 +61,21 @@ export function QuestionSetsPanel({ data, setData }: Props) {
     resetForm()
   }
 
-  const ytValid = attach !== 'youtube' || !!youTubeId(link)
-  const mediaReady = attach === 'none' || (attach === 'youtube' ? !!youTubeId(link) : !!file || keptMedia?.kind === attach)
-  const canSave = !!active && (text.trim() !== '' || attach !== 'none') && mediaReady && !busy
+  const canSave = !!active && (text.trim() !== '' || qMedia.attach !== 'none') && draftReady(qMedia) && draftReady(aMedia) && !busy
 
   const save = async (e: FormEvent) => {
     e.preventDefault()
     if (!active || !canSave) return
     setBusy(true)
     try {
-      const old = editingId ? active.questions.find((q) => q.id === editingId)?.media : undefined
-      let media: QuestionMedia | undefined
-      if (attach === 'youtube') media = { kind: 'youtube', ref: link.trim() }
-      else if ((attach === 'audio' || attach === 'video') && file) {
-        const id = await putMedia(uid(), file)
-        media = { kind: attach, ref: id, name: file.name }
-      } else if (attach !== 'none' && keptMedia?.kind === attach) media = keptMedia
+      const old = editingId ? active.questions.find((q) => q.id === editingId) : undefined
+      const media = await resolveDraft(qMedia)
+      const answerMedia = await resolveDraft(aMedia)
+      // Remove replaced / dropped files from storage.
+      if (old?.media && old.media.ref !== media?.ref) dropFiles(old.media)
+      if (old?.answerMedia && old.answerMedia.ref !== answerMedia?.ref) dropFiles(old.answerMedia)
 
-      // Remove a replaced / dropped file from storage.
-      if (old && old.kind !== 'youtube' && old.ref !== media?.ref) void deleteMedia(old.ref)
-
-      const q: Question = { id: editingId ?? uid(), text: text.trim(), media, answer: answer.trim() || undefined }
+      const q: Question = { id: editingId ?? uid(), text: text.trim(), media, answer: answer.trim() || undefined, answerMedia }
       updateSet(active.id, (s) => ({
         ...s,
         questions: editingId ? s.questions.map((x) => (x.id === editingId ? q : x)) : [...s.questions, q],
@@ -102,16 +91,14 @@ export function QuestionSetsPanel({ data, setData }: Props) {
     setEditingId(q.id)
     setText(q.text)
     setAnswer(q.answer ?? '')
-    setAttach(q.media?.kind ?? 'none')
-    setKeptMedia(q.media)
-    setLink(q.media?.kind === 'youtube' ? q.media.ref : '')
-    setFile(null)
+    setQMedia(draftFrom(q.media))
+    setAMedia(draftFrom(q.answerMedia))
     textRef.current?.focus()
   }
 
   const remove = (q: Question) => {
     if (!active || !window.confirm(t('confirmDeleteQ'))) return
-    if (q.media && q.media.kind !== 'youtube') void deleteMedia(q.media.ref)
+    dropFiles(q.media, q.answerMedia)
     updateSet(active.id, (s) => ({ ...s, questions: s.questions.filter((x) => x.id !== q.id) }))
     if (editingId === q.id) resetForm()
   }
@@ -128,7 +115,6 @@ export function QuestionSetsPanel({ data, setData }: Props) {
   }
 
   const editingIndex = editingId && active ? active.questions.findIndex((q) => q.id === editingId) : -1
-  const bigFile = file && file.size > 200 * 1024 * 1024 ? Math.round(file.size / 1024 / 1024) : 0
 
   return (
     <div className="classes sets">
@@ -186,83 +172,37 @@ export function QuestionSetsPanel({ data, setData }: Props) {
             </div>
 
             <form className="panel qform" onSubmit={save}>
-              <label htmlFor="q-text" className="chalk-label">
-                {editingIndex >= 0 ? t('qEditing', { n: editingIndex + 1 }) : t('qText')}
-              </label>
-              <textarea
-                id="q-text"
-                ref={textRef}
-                className="chalk-input chalk-textarea qform__text"
-                rows={2}
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder={t('qTextPlaceholder')}
-              />
-              <div className="qform__row">
-                <span className="muted">{t('qAttach')}:</span>
-                <div className="seg" role="radiogroup" aria-label={t('qAttach')}>
-                  {(['none', 'audio', 'video', 'youtube'] as const).map((k) => (
-                    <button
-                      key={k}
-                      type="button"
-                      role="radio"
-                      aria-checked={attach === k}
-                      className={`seg__btn${attach === k ? ' seg__btn--on' : ''}`}
-                      onClick={() => {
-                        setAttach(k)
-                        setFile(null)
-                        if (fileRef.current) fileRef.current.value = ''
-                      }}
-                    >
-                      {k === 'none' ? t('qNone') : k === 'audio' ? t('qAudio') : k === 'video' ? t('qVideo') : t('qYoutube')}
-                    </button>
-                  ))}
+              <div className="qform__grid">
+                <div className="qform__col">
+                  <label htmlFor="q-text" className="qform__label">
+                    {editingIndex >= 0 ? t('qEditing', { n: editingIndex + 1 }) : t('qText')}
+                  </label>
+                  <textarea
+                    id="q-text"
+                    ref={textRef}
+                    className="chalk-input chalk-textarea qform__text"
+                    rows={2}
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder={t('qTextPlaceholder')}
+                  />
+                  <MediaField id="q-media" draft={qMedia} onChange={setQMedia} />
                 </div>
-
-                {(attach === 'audio' || attach === 'video') && (
-                  <>
-                    <button type="button" className="btn btn--small" onClick={() => fileRef.current?.click()}>
-                      {t('qChooseFile')}
-                    </button>
-                    <span className="qform__file">{file?.name ?? (keptMedia?.kind === attach ? keptMedia.name : '')}</span>
-                    <input
-                      ref={fileRef}
-                      type="file"
-                      accept={ACCEPT[attach]}
-                      hidden
-                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                    />
-                  </>
-                )}
-                {attach === 'youtube' && (
-                  <>
-                    <label htmlFor="q-yt" className="sr-only">
-                      {t('qYoutubeLink')}
-                    </label>
-                    <input
-                      id="q-yt"
-                      className="chalk-input qform__link"
-                      value={link}
-                      onChange={(e) => setLink(e.target.value)}
-                      placeholder="https://youtu.be/…"
-                      spellCheck={false}
-                    />
-                  </>
-                )}
+                <div className="qform__col qform__col--answer">
+                  <label htmlFor="q-answer" className="qform__label qform__label--answer">
+                    {t('qAnswer')}
+                  </label>
+                  <textarea
+                    id="q-answer"
+                    className="chalk-input chalk-textarea qform__answer"
+                    rows={2}
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    placeholder={t('qAnswerPlaceholder')}
+                  />
+                  <MediaField id="a-media" draft={aMedia} onChange={setAMedia} />
+                </div>
               </div>
-              <label htmlFor="q-answer" className="chalk-label qform__answer-label">
-                {t('qAnswer')}
-              </label>
-              <textarea
-                id="q-answer"
-                className="chalk-input chalk-textarea qform__answer"
-                rows={2}
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                placeholder={t('qAnswerPlaceholder')}
-              />
-              {!ytValid && link.trim() !== '' && <span className="qform__warn">{t('qYoutubeBad')}</span>}
-              {bigFile > 0 && <span className="qform__warn">{t('qFileBig', { mb: bigFile })}</span>}
               <div className="row qform__actions">
                 {editingId && (
                   <button type="button" className="btn btn--link btn--small" onClick={resetForm}>
@@ -289,6 +229,17 @@ export function QuestionSetsPanel({ data, setData }: Props) {
                           <p className="qlist__answer">
                             <b>{t('answerLabel')}:</b> {q.answer}
                           </p>
+                        )}
+                        {q.answerMedia && (
+                          <details className="qlist__media">
+                            <summary>
+                              <span className="qlist__answer">
+                                <b>{t('answerLabel')}:</b>
+                              </span>{' '}
+                              <MediaBadge media={q.answerMedia} />
+                            </summary>
+                            <MediaView media={q.answerMedia} />
+                          </details>
                         )}
                         {q.media && (
                           <details className="qlist__media">

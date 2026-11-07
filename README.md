@@ -1,4 +1,4 @@
-# Lớp Hóa học thầy Lê Quang Quí 🧪
+# Lớp Khoa học tự nhiên thầy Lê Quang Quí 🧪
 
 *(project folder: classroom-roulette)*
 
@@ -39,7 +39,7 @@ fun fact about their element.
   Audio/video files are stored in the browser (IndexedDB) on that computer only; the backup file
   keeps the text and YouTube links.
 - **Question rounds**: next to the *Câu hỏi* button, **Bắt đầu vòng** starts a round with the chosen
-  set. The question view has **Kiểm tra đáp án**, which reveals the answer saved with the question; then **✓ Trả lời đúng** / **✗ Trả lời sai**: grading marks the student,
+  set. The question view has **Kiểm tra đáp án**, which reveals the answer saved with the question (text and/or audio, video or YouTube); questions or answers with video get a near-full-screen popup with everything else made small; then **✓ Trả lời đúng** / **✗ Trả lời sai**: grading marks the student,
   takes that question out of the round (the next spin only draws from the questions left) and
   plays fireworks for a right answer or a smoke-and-bubbles "fizzle" for a wrong one. *Câu khác*
   swaps the question without using it up. **Kết thúc vòng** (or answering the last question)

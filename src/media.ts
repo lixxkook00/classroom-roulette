@@ -88,5 +88,12 @@ export function youTubeStart(link: string): number {
   }
 }
 
-/** True when a question needs the big popup (video / YouTube). */
-export const isWide = (q: Question | null | undefined) => !!q?.media && q.media.kind !== 'audio'
+const isVideo = (m: Question['media']) => !!m && m.kind !== 'audio'
+
+/** True when a question (or its answer) has a video / YouTube clip, so the popup goes big. */
+export const isWide = (q: Question | null | undefined) => !!q && (isVideo(q.media) || isVideo(q.answerMedia))
+
+/** Video / YouTube attached to the question itself. */
+export const hasQuestionVideo = (q: Question) => isVideo(q.media)
+/** Video / YouTube attached to the answer. */
+export const hasAnswerVideo = (q: Question) => isVideo(q.answerMedia)

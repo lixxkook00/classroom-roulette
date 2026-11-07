@@ -99,6 +99,8 @@ export interface Question {
   media?: QuestionMedia
   /** The correct answer, revealed with "Kiểm tra đáp án". */
   answer?: string
+  /** Audio / video / YouTube shown with the answer. */
+  answerMedia?: QuestionMedia
 }
 
 export interface QuestionSet {
@@ -213,9 +215,15 @@ export function cleanElements(list: unknown[]): number[] {
   return [...new Set(list.map(Number).filter((z) => Number.isInteger(z) && z >= 1 && z <= MAX_STUDENTS))].sort((a, b) => a - b)
 }
 
+const MEDIA_KINDS: MediaKind[] = ['audio', 'video', 'youtube']
+function cleanMedia(m: QuestionMedia | undefined): QuestionMedia | undefined {
+  return m && MEDIA_KINDS.includes(m.kind) && typeof m.ref === 'string'
+    ? { kind: m.kind, ref: m.ref, name: typeof m.name === 'string' ? m.name : undefined }
+    : undefined
+}
+
 function cleanQuestionSets(raw: unknown): QuestionSet[] {
   if (!Array.isArray(raw)) return []
-  const kinds: MediaKind[] = ['audio', 'video', 'youtube']
   return raw
     .filter((s) => s && typeof s.id === 'string' && typeof s.name === 'string' && Array.isArray(s.questions))
     .map((s) => ({
@@ -227,10 +235,8 @@ function cleanQuestionSets(raw: unknown): QuestionSet[] {
           id: q.id,
           text: q.text,
           answer: typeof q.answer === 'string' && q.answer.trim() ? q.answer : undefined,
-          media:
-            q.media && kinds.includes(q.media.kind) && typeof q.media.ref === 'string'
-              ? { kind: q.media.kind, ref: q.media.ref, name: typeof q.media.name === 'string' ? q.media.name : undefined }
-              : undefined,
+          media: cleanMedia(q.media),
+          answerMedia: cleanMedia(q.answerMedia),
         })),
     }))
 }
