@@ -1,1 +1,88 @@
-# classroom-roulette
+# Element Roulette 🧪
+
+A chalkboard-style periodic table that picks which student explains the last lesson
+(*Hôm nay ai trả bài?*). Students get elements in list order, in one of two modes
+(a switch on the spin screen):
+
+- **Use the whole table** (default): the table is shared out so every student gets the
+  same number of elements — floor(118 ÷ class size). With 30 students that is 3 each:
+  #1 owns H (1), Ga (31) and Pm (61), #2 owns He, Ge and Sm, … and elements 91–118 are unused.
+- **Off**: one element each — #1 is H, #2 is He — and the rest of the table is unused. Hit **Spin** (or press **Space**),
+the table glows through the students, and a card pops up with the student's name and a
+fun fact about their element.
+
+## Features
+
+- **Spin screen**: full periodic table coloured by element group, every element lit. The
+  glow shuffles across the table, slows down and lands on one element; that student's other
+  elements light up too. Every student owns the same number of elements, and the winner is
+  drawn per student, so the pick is fair. The colour key sits in the empty gap at the top of
+  the table. Space spins and stops early.
+- **Mystery card mode** (*Thẻ bí ẩn* — switch *Bảng | Thẻ bí ẩn* at the top): a big blank
+  card is on screen from the start. Spin rolls every field like a slot machine, then they lock
+  one by one — element type → period → the element (and its group) → the student — so the class
+  can guess along; values still rolling only show options that fit the clues already locked.
+  The finished card shows the fun fact with *Mark as tested* / *Absent*. The winner is drawn up
+  front exactly like table mode, so the reveal never changes anyone's chance.
+- **Winner card**: element tile, student name, a fun fact, all of the student's elements,
+  and three actions:
+  *Mark as tested*, *Spin again*, *Absent — skip* (skips them for the rest of the session).
+- **Tested last time**: students marked as tested sit out until the marks are cleared.
+  When everyone has had a turn, the app offers to start a new round.
+- **Element tooltips**: hover any element for its name, group, mass, period/group and the
+  student who owns it (and whether they were tested or are absent).
+- **Smart list import**: press *Import a list*, or just Ctrl+V anywhere on the class page.
+  Paste cells from Excel / Google Sheets, a list from Word or Zalo, or drop a .csv / .txt
+  file. It detects the header row and which columns hold the name (joins *Họ đệm* + *Tên*),
+  skips STT / ID / date / gender columns, fixes ALL-CAPS names, strips numbering and flags
+  duplicates — with a live preview before adding.
+- **Class manager**: create, rename and delete classes; reorder, edit and remove students;
+  tick or untick "tested last time" by hand.
+- **Backup**: everything is saved in the browser (localStorage). Export or import a JSON
+  file to move the classes to another computer.
+- **Vietnamese / English**: switch with the VI | EN toggle on the class page; the choice is remembered.
+  Vietnamese shows IUPAC names as in the new textbooks, plus the familiar name where there
+  is one (e.g. *Iron (sắt)*), and groups as *Nhóm VIIIB (8)*.
+- **Always fits the screen**: the table scales to the window; nothing scrolls the page
+  (the student list scrolls inside its own box).
+- Screens slide between each other (View Transitions API, with a fallback).
+- Chalk-styled dropdowns, switches and checkboxes instead of the browser defaults.
+- Sound effects with a mute toggle; respects "reduce motion".
+
+## Run it locally
+
+```bash
+npm install
+npm run dev
+```
+
+## Deploy to Vercel
+
+1. Push this folder to GitHub.
+2. In Vercel, **Add New → Project** and import the repo.
+3. Vercel detects Vite automatically (build: `npm run build`, output: `dist`). Click **Deploy**.
+
+No server or environment variables are needed. The app uses hash URLs (`#/classes`),
+so no rewrite rules are needed either.
+
+## Project layout
+
+```
+src/
+  data/elements.ts          118 elements: symbol, name, mass, group, position, fun fact (EN)
+  data/facts.vi.ts          Vietnamese fun facts and traditional names
+  i18n.tsx                  VI/EN strings, language toggle
+  store.ts                  classes & students, saved to localStorage
+  smartImport.ts            turns pasted sheets / lists / CSV into clean names
+  sound.ts                  tiny Web Audio tick / lock / win sounds
+  util.ts                   random helpers, Space-key handling
+  components/
+    PeriodicTable.tsx       the table grid
+    SpinScreen.tsx          spin animation, Space shortcut, landed banner
+    WinnerModal.tsx         the fun-fact popup
+    CardMode.tsx            mystery card: slot-machine reveal, clue by clue
+    ClassesScreen.tsx       class & student manager
+    ImportDialog.tsx        paste / drop a class list with live preview
+    controls.tsx            chalk dropdown and switch
+  index.css                 chalkboard theme
+```
