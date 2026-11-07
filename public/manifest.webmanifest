@@ -1,0 +1,19 @@
+{
+  "name": "Lớp Hóa học thầy Lê Quang Quí",
+  "short_name": "Hóa thầy Quí",
+  "description": "Bảng tuần hoàn thông minh, trò chơi đoán nguyên tố và trả lời câu hỏi cùng cả lớp.",
+  "lang": "vi",
+  "start_url": "/#/table",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#22392f",
+  "theme_color": "#22392f",
+  "categories": ["education"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

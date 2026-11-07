@@ -149,6 +149,17 @@ function Tabs({ view, teacher, onTeacher, onLock }: { view: View; teacher: boole
   )
 }
 
+const SITE_NAME = { vi: 'Lớp Hóa học thầy Lê Quang Quí', en: 'Mr. Lê Quang Quí’s Chemistry Class' }
+
+/** Browser-tab title per tab, e.g. "Bảng tuần hoàn thông minh · Lớp Hóa học thầy Lê Quang Quí". */
+function useDocumentTitle(view: View) {
+  const { t, lang } = useI18n()
+  useEffect(() => {
+    const page = { spin: t('appTitle'), table: t('exploreTitle'), guess: t('guessTitle'), classes: t('myClasses') }[view]
+    document.title = `${page} · ${SITE_NAME[lang]}`
+  }, [view, lang, t])
+}
+
 function Credit() {
   const { t } = useI18n()
   return <div className="credit">{t('credit')}</div>
@@ -217,6 +228,8 @@ function Screens() {
     if (STUDENT_VIEWS.includes(view)) setTeacher(false)
     else viewTransition('back', () => setTeacher(false))
   }
+
+  useDocumentTitle(view)
 
   const params = route.params
   const shared = view === 'guess' ? sharedSetFrom(params) : null

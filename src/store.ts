@@ -97,6 +97,8 @@ export interface Question {
   id: string
   text: string
   media?: QuestionMedia
+  /** The correct answer, revealed with "Kiểm tra đáp án". */
+  answer?: string
 }
 
 export interface QuestionSet {
@@ -224,6 +226,7 @@ function cleanQuestionSets(raw: unknown): QuestionSet[] {
         .map((q) => ({
           id: q.id,
           text: q.text,
+          answer: typeof q.answer === 'string' && q.answer.trim() ? q.answer : undefined,
           media:
             q.media && kinds.includes(q.media.kind) && typeof q.media.ref === 'string'
               ? { kind: q.media.kind, ref: q.media.ref, name: typeof q.media.name === 'string' ? q.media.name : undefined }

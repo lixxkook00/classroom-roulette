@@ -23,7 +23,7 @@ const en = {
   newRound: 'Start a new round',
   showCard: 'Show card',
   shuffling: 'Shuffling {n} students… press Space to stop early',
-  inDraw: '{n} of {total} students in the draw · Space to spin',
+  inDraw: '{total} students · press Space to spin',
   skipTested: 'Skip students tested last time',
   stop: 'Stop!',
   spin: 'Spin',
@@ -84,7 +84,7 @@ const en = {
   confirmRemove: 'Remove {name}? The elements will be shared out again.',
   added: 'Added {n} students.',
   addedOverflow: 'Added {n} students — the table only has {max} elements, so {m} were left out.',
-  badBackup: "That file doesn't look like an Element Roulette backup.",
+  badBackup: "That file doesn't look like a backup from this app.",
   confirmRestore: 'Replace everything here with the {n} classes from this backup?',
   restored: 'Restored {n} classes from the backup.',
   credit: 'Made by Mr. Lê Quang Quí',
@@ -252,6 +252,11 @@ const en = {
   roundResult: 'Result',
   roundTime: 'Time',
   downloadCsv: 'Download results (.csv)',
+  qAnswer: 'Answer (optional)',
+  qAnswerPlaceholder: 'The correct answer, shown with “Check answer”…',
+  answerLabel: 'Answer',
+  checkAnswer: 'Check answer',
+  noAnswerSaved: 'No answer saved for this question',
   shareAll: 'Use the whole table',
   shareAllHint: 'On: the table is shared out so every student gets the same number of elements (3 each for 30 students). Off: one element per student.',
   myClassesSubOne: 'Each student gets one element in list order — #1 is H, #2 is He…',
@@ -300,7 +305,7 @@ const vi: Record<Key, string> = {
   newRound: 'Bắt đầu vòng mới',
   showCard: 'Xem thẻ',
   shuffling: 'Đang xáo {n} học sinh… nhấn Space để dừng sớm',
-  inDraw: '{n}/{total} học sinh trong lượt quay · nhấn Space để quay',
+  inDraw: '{total} học sinh · nhấn Space để quay',
   skipTested: 'Bỏ qua học sinh đã kiểm tra lần trước',
   stop: 'Dừng!',
   spin: 'Quay',
@@ -361,7 +366,7 @@ const vi: Record<Key, string> = {
   confirmRemove: 'Xóa {name}? Các nguyên tố sẽ được chia lại.',
   added: 'Đã thêm {n} học sinh.',
   addedOverflow: 'Đã thêm {n} học sinh — bảng chỉ có {max} nguyên tố nên {m} tên bị bỏ qua.',
-  badBackup: 'Tệp này không phải bản sao lưu của Element Roulette.',
+  badBackup: 'Tệp này không phải bản sao lưu của ứng dụng này.',
   confirmRestore: 'Thay toàn bộ dữ liệu hiện tại bằng {n} lớp trong bản sao lưu?',
   restored: 'Đã khôi phục {n} lớp từ bản sao lưu.',
   credit: 'Thực hiện bởi thầy Lê Quang Quí',
@@ -529,6 +534,11 @@ const vi: Record<Key, string> = {
   roundResult: 'Kết quả',
   roundTime: 'Thời gian',
   downloadCsv: 'Tải kết quả (.csv)',
+  qAnswer: 'Đáp án (không bắt buộc)',
+  qAnswerPlaceholder: 'Đáp án đúng, hiện ra khi bấm “Kiểm tra đáp án”…',
+  answerLabel: 'Đáp án',
+  checkAnswer: 'Kiểm tra đáp án',
+  noAnswerSaved: 'Câu này chưa có đáp án',
   shareAll: 'Dùng cả bảng',
   shareAllHint: 'Bật: chia bảng sao cho mọi em có số nguyên tố bằng nhau (lớp 30 em thì mỗi em 3). Tắt: mỗi em một nguyên tố.',
   myClassesSubOne: 'Mỗi học sinh nhận một nguyên tố theo thứ tự danh sách — #1 là H, #2 là He…',
@@ -596,7 +606,7 @@ interface I18n {
   elFact: (el: Element) => string
   catLabel: (c: Category) => string
   groupLabel: (el: Element) => string
-  /** Group without the word "Group": '16' or 'VIA (16)'. */
+  /** Group without the word "Group": '16' (English) or 'VIA' (Vietnamese). */
   groupShort: (el: Element) => string
   locale: string
 }
@@ -608,7 +618,6 @@ export function LangProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = lang
-    document.title = lang === 'vi' ? 'Element Roulette — Ai sẽ trả lời câu hỏi?' : "Element Roulette — Who will answer?"
     try {
       localStorage.setItem(LANG_KEY, lang)
     } catch {
@@ -630,10 +639,11 @@ export function LangProvider({ children }: { children: ReactNode }) {
       elName: (el) => (lang === 'vi' && NAME_VI_EXTRA[el.symbol] ? `${el.name} (${NAME_VI_EXTRA[el.symbol]})` : el.name),
       elFact: (el) => (lang === 'vi' ? (FACTS_VI[el.z - 1] ?? el.fact) : el.fact),
       catLabel: (c) => (lang === 'vi' ? CATEGORY_VI[c] : CATEGORY_LABEL[c]),
-      groupShort: (el) => (!el.group ? '—' : lang === 'vi' ? `${GROUP_AB[el.group - 1]} (${el.group})` : String(el.group)),
+      // Vietnamese textbooks: just the A/B group ("VIIIB"); English: the IUPAC number.
+      groupShort: (el) => (!el.group ? '—' : lang === 'vi' ? GROUP_AB[el.group - 1] : String(el.group)),
       groupLabel: (el) => {
         if (!el.group) return dict.fBlock
-        return lang === 'vi' ? t('group', { n: `${GROUP_AB[el.group - 1]} (${el.group})` }) : t('group', { n: el.group })
+        return lang === 'vi' ? t('group', { n: GROUP_AB[el.group - 1] }) : t('group', { n: el.group })
       },
     }
   }, [lang, setLang])

@@ -3,7 +3,7 @@ import type { Element } from '../data/elements'
 import { useI18n } from '../i18n'
 import { viewTransition } from '../util'
 import { isWide } from '../media'
-import { GradeButtons, QuestionStage, type QuestionInfo } from './QuestionStage'
+import { QuestionStage, type QuestionInfo } from './QuestionStage'
 
 interface Props {
   element: Element
@@ -81,7 +81,16 @@ export function WinnerModal({
         aria-labelledby="winner-name"
       >
         <button type="button" className="icon-btn winner__close" aria-label={t('close')} onClick={onClose}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
             <path d="M6 6l12 12M18 6L6 18" />
           </svg>
         </button>
@@ -93,14 +102,17 @@ export function WinnerModal({
             studentName={studentName}
             className={className}
             info={question}
-            actions={
+            onCorrect={onCorrect}
+            onWrong={onWrong}
+            beforeReveal={
+              canChangeQuestion && (
+                <button type="button" className="btn" onClick={another}>
+                  {t('anotherQuestion')}
+                </button>
+              )
+            }
+            extra={
               <>
-                <GradeButtons onCorrect={onCorrect} onWrong={onWrong} />
-                {canChangeQuestion && (
-                  <button type="button" className="btn" onClick={another}>
-                    {t('anotherQuestion')}
-                  </button>
-                )}
                 <button type="button" className="btn btn--link" onClick={backToCard}>
                   {t('backToCard')}
                 </button>

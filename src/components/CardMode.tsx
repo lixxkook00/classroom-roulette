@@ -330,7 +330,7 @@ export function CardMode({
             </div>
           ) : (
             <span className="chalk-sub">
-              {rolling ? t('shuffling', { n: eligible.length }) : t('inDraw', { n: eligible.length, total: count })}
+              {rolling ? t('shuffling', { n: students.length }) : t('inDraw', { total: count })}
             </span>
           )}
         </div>

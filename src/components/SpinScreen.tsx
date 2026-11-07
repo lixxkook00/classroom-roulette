@@ -383,7 +383,6 @@ export function SpinScreen({ data, setData, updateClass, onManage, onManageQuest
     resetSpin()
   }
 
-  const testedCount = students.filter((s) => s.tested).length
   const dateLabel = new Intl.DateTimeFormat(locale, {
     weekday: 'short',
     day: '2-digit',
@@ -407,12 +406,26 @@ export function SpinScreen({ data, setData, updateClass, onManage, onManageQuest
 
   const switches = (
     <div className="spin-bar__switches">
-      <Switch checked={shareAll} onChange={setShareAll} disabled={busy} title={t('shareAllHint')}>
-        {t('shareAll')}
+      <Switch checked={shareAll} onChange={setShareAll} disabled={busy} ariaLabel={t('shareAll')}>
+        <svg className="switch__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <rect x="3" y="4" width="5" height="5" rx="1" />
+          <rect x="16" y="4" width="5" height="5" rx="1" />
+          <rect x="3" y="11" width="18" height="5" rx="1" />
+          <rect x="7" y="18" width="12" height="2.5" rx="1" />
+        </svg>
       </Switch>
-      <Switch checked={data.skipTested} onChange={(v) => setData((d) => ({ ...d, skipTested: v }))} disabled={busy}>
-        {t('skipTested')}
-        {testedCount > 0 ? ` (${testedCount})` : ''}
+      {/* Icon only, so students watching the projector can't tell some of them are safe. */}
+      <Switch
+        checked={data.skipTested}
+        onChange={(v) => setData((d) => ({ ...d, skipTested: v }))}
+        disabled={busy}
+        ariaLabel={t('skipTested')}
+      >
+        <svg className="switch__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="9" cy="8" r="3.5" />
+          <path d="M3 20v-1.5A4.5 4.5 0 0 1 7.5 14h3A4.5 4.5 0 0 1 15 18.5V20" />
+          <path d="M16 11l2 2 4-4" />
+        </svg>
       </Switch>
     </div>
   )
@@ -569,7 +582,7 @@ export function SpinScreen({ data, setData, updateClass, onManage, onManageQuest
                   ) : (
                     <span className="chalk-sub">
                       {phase === 'spinning'
-                        ? t('shuffling', { n: eligible.length })
+                        ? t('shuffling', { n: students.length })
                         : t('inDraw', {
                             n: eligible.length,
                             total: students.length,

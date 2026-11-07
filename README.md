@@ -1,4 +1,6 @@
-# Element Roulette 🧪
+# Lớp Hóa học thầy Lê Quang Quí 🧪
+
+*(project folder: classroom-roulette)*
 
 A chalkboard-style periodic table that picks which student answers the question
 (*Ai sẽ trả lời câu hỏi?*). Students get elements in list order, in one of two modes
@@ -37,7 +39,7 @@ fun fact about their element.
   Audio/video files are stored in the browser (IndexedDB) on that computer only; the backup file
   keeps the text and YouTube links.
 - **Question rounds**: next to the *Câu hỏi* button, **Bắt đầu vòng** starts a round with the chosen
-  set. The question view has **✓ Trả lời đúng** / **✗ Trả lời sai**: grading marks the student,
+  set. The question view has **Kiểm tra đáp án**, which reveals the answer saved with the question; then **✓ Trả lời đúng** / **✗ Trả lời sai**: grading marks the student,
   takes that question out of the round (the next spin only draws from the questions left) and
   plays fireworks for a right answer or a smoke-and-bubbles "fizzle" for a wrong one. *Câu khác*
   swaps the question without using it up. **Kết thúc vòng** (or answering the last question)
@@ -76,7 +78,7 @@ fun fact about their element.
   file to move the classes to another computer.
 - **Vietnamese / English**: switch with the VI | EN toggle on the class page; the choice is remembered.
   Vietnamese shows IUPAC names as in the new textbooks, plus the familiar name where there
-  is one (e.g. *Iron (sắt)*), and groups as *Nhóm VIIIB (8)*.
+  is one (e.g. *Iron (sắt)*), and groups the Vietnamese-textbook way (*Nhóm VIIIB*).
 - **Always fits the screen**: the table scales to the window; nothing scrolls the page
   (the student list scrolls inside its own box).
 - Screens slide between each other, and switching *Bảng ⇄ Thẻ bí ẩn* animates too: the old
@@ -92,6 +94,19 @@ fun fact about their element.
 pnpm install
 pnpm dev
 ```
+
+## Site address & SEO
+
+The live address is used for the search/sharing tags, `robots.txt` and `sitemap.xml`.
+Default: `https://lequangqui-classroom.vercel.app`. To use a different one (or your own
+domain), set **`VITE_SITE_URL`** in Vercel → *Project → Settings → Environment Variables*
+(no trailing slash), then redeploy.
+
+Included: Vietnamese title/description/keywords, a share image for Zalo/Facebook
+(`public/og-image.png`, 1200×630), structured data (schema.org `WebApplication`), app icons and a
+web manifest (students can "Add to Home Screen" — it opens on the periodic table), and a
+per-tab browser title. After the first deploy, add the site in Google Search Console and submit
+`/sitemap.xml`.
 
 ## Teacher password
 

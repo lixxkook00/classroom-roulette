@@ -178,7 +178,7 @@ export function ClassesScreen({ data, setData, updateClass, onPlaySet, initialSe
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `element-roulette-backup-${today()}.json`
+    a.download = `lop-hoa-thay-qui-sao-luu-${today()}.json`
     a.click()
     URL.revokeObjectURL(url)
   }

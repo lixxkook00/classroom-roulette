@@ -23,6 +23,7 @@ export function QuestionSetsPanel({ data, setData }: Props) {
   // Question form
   const [editingId, setEditingId] = useState<string | null>(null)
   const [text, setText] = useState('')
+  const [answer, setAnswer] = useState('')
   const [attach, setAttach] = useState<Attach>('none')
   const [file, setFile] = useState<File | null>(null)
   const [keptMedia, setKeptMedia] = useState<QuestionMedia | undefined>(undefined)
@@ -37,6 +38,7 @@ export function QuestionSetsPanel({ data, setData }: Props) {
   const resetForm = () => {
     setEditingId(null)
     setText('')
+    setAnswer('')
     setAttach('none')
     setFile(null)
     setKeptMedia(undefined)
@@ -84,7 +86,7 @@ export function QuestionSetsPanel({ data, setData }: Props) {
       // Remove a replaced / dropped file from storage.
       if (old && old.kind !== 'youtube' && old.ref !== media?.ref) void deleteMedia(old.ref)
 
-      const q: Question = { id: editingId ?? uid(), text: text.trim(), media }
+      const q: Question = { id: editingId ?? uid(), text: text.trim(), media, answer: answer.trim() || undefined }
       updateSet(active.id, (s) => ({
         ...s,
         questions: editingId ? s.questions.map((x) => (x.id === editingId ? q : x)) : [...s.questions, q],
@@ -99,6 +101,7 @@ export function QuestionSetsPanel({ data, setData }: Props) {
   const edit = (q: Question) => {
     setEditingId(q.id)
     setText(q.text)
+    setAnswer(q.answer ?? '')
     setAttach(q.media?.kind ?? 'none')
     setKeptMedia(q.media)
     setLink(q.media?.kind === 'youtube' ? q.media.ref : '')
@@ -247,6 +250,17 @@ export function QuestionSetsPanel({ data, setData }: Props) {
                   </>
                 )}
               </div>
+              <label htmlFor="q-answer" className="chalk-label qform__answer-label">
+                {t('qAnswer')}
+              </label>
+              <textarea
+                id="q-answer"
+                className="chalk-input chalk-textarea qform__answer"
+                rows={2}
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder={t('qAnswerPlaceholder')}
+              />
               {!ytValid && link.trim() !== '' && <span className="qform__warn">{t('qYoutubeBad')}</span>}
               {bigFile > 0 && <span className="qform__warn">{t('qFileBig', { mb: bigFile })}</span>}
               <div className="row qform__actions">
@@ -271,6 +285,11 @@ export function QuestionSetsPanel({ data, setData }: Props) {
                       <span className="qlist__n">{i + 1}</span>
                       <div className="qlist__body">
                         {q.text && <p className="qlist__text">{q.text}</p>}
+                        {q.answer && (
+                          <p className="qlist__answer">
+                            <b>{t('answerLabel')}:</b> {q.answer}
+                          </p>
+                        )}
                         {q.media && (
                           <details className="qlist__media">
                             <summary>

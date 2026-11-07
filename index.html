@@ -2,10 +2,70 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- Primary -->
+    <title>Lớp Hóa học thầy Lê Quang Quí — Bảng tuần hoàn thông minh &amp; trò chơi hóa học</title>
+    <meta
+      name="description"
+      content="Lớp học Hóa trực tuyến của thầy Lê Quang Quí: bảng tuần hoàn thông minh có phát âm tiếng Anh, cấu hình electron và phương trình hóa học; trò chơi đoán nguyên tố; gọi học sinh trả lời câu hỏi ngẫu nhiên trên lớp."
+    />
+    <meta
+      name="keywords"
+      content="bảng tuần hoàn, bảng tuần hoàn hóa học, nguyên tố hóa học, cấu hình electron, đoán nguyên tố, hóa học lớp 10, phương trình hóa học, cách đọc nguyên tố tiếng Anh, thầy Lê Quang Quí, lớp học hóa"
+    />
+    <meta name="author" content="Lê Quang Quí" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="%VITE_SITE_URL%/" />
+    <meta name="theme-color" content="#22392f" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Icons / installable app -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Chọn học sinh trả lời câu hỏi bằng bảng tuần hoàn — Ai sẽ trả lời câu hỏi?" />
-    <title>Element Roulette — Ai sẽ trả lời câu hỏi?</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Hóa thầy Quí" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Sharing (Zalo, Facebook, Messenger…) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="vi_VN" />
+    <meta property="og:site_name" content="Lớp Hóa học thầy Lê Quang Quí" />
+    <meta property="og:title" content="Lớp Hóa học thầy Lê Quang Quí" />
+    <meta property="og:description" content="Bảng tuần hoàn thông minh, trò chơi đoán nguyên tố và trả lời câu hỏi cùng cả lớp." />
+    <meta property="og:url" content="%VITE_SITE_URL%/" />
+    <meta property="og:image" content="%VITE_SITE_URL%/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Lớp Hóa học thầy Lê Quang Quí — bảng tuần hoàn trên nền bảng đen" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Lớp Hóa học thầy Lê Quang Quí" />
+    <meta name="twitter:description" content="Bảng tuần hoàn thông minh, trò chơi đoán nguyên tố và trả lời câu hỏi cùng cả lớp." />
+    <meta name="twitter:image" content="%VITE_SITE_URL%/og-image.png" />
+
+    <!-- Structured data for search engines -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Lớp Hóa học thầy Lê Quang Quí",
+        "alternateName": "Hóa thầy Quí",
+        "url": "%VITE_SITE_URL%/",
+        "image": "%VITE_SITE_URL%/og-image.png",
+        "description": "Bảng tuần hoàn thông minh có phát âm tiếng Anh, cấu hình electron và phương trình hóa học; trò chơi đoán nguyên tố; trả lời câu hỏi cùng cả lớp.",
+        "inLanguage": ["vi", "en"],
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "VND" },
+        "educationalLevel": "Trung học phổ thông",
+        "audience": { "@type": "EducationalAudience", "educationalRole": "student" },
+        "author": { "@type": "Person", "name": "Lê Quang Quí", "jobTitle": "Giáo viên Hóa học" }
+      }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -14,6 +74,10 @@
     />
   </head>
   <body>
+    <noscript>
+      <h1>Lớp Hóa học thầy Lê Quang Quí</h1>
+      <p>Bảng tuần hoàn thông minh, trò chơi đoán nguyên tố và trả lời câu hỏi cùng cả lớp. Vui lòng bật JavaScript để sử dụng.</p>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

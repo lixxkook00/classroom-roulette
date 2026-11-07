@@ -158,10 +158,12 @@ interface SwitchProps {
   children: ReactNode
   disabled?: boolean
   title?: string
+  /** Accessible name when the visible label is only an icon. */
+  ariaLabel?: string
 }
 
 /** Chalk on/off switch. */
-export function Switch({ checked, onChange, children, disabled, title }: SwitchProps) {
+export function Switch({ checked, onChange, children, disabled, title, ariaLabel }: SwitchProps) {
   return (
     <button
       type="button"
@@ -171,6 +173,7 @@ export function Switch({ checked, onChange, children, disabled, title }: SwitchP
       onClick={() => onChange(!checked)}
       disabled={disabled}
       title={title}
+      aria-label={ariaLabel}
     >
       <span className="switch__track" aria-hidden="true">
         <span className="switch__thumb" />
