@@ -20,7 +20,8 @@ export function WinnerModal({ element, owned, order, studentName, className, onM
   const primaryRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    primaryRef.current?.focus()
+    // preventScroll: on small screens the card scrolls; keep it at the top so the name shows first.
+    primaryRef.current?.focus({ preventScroll: true })
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()

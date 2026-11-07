@@ -45,7 +45,10 @@ fun fact about their element.
   is one (e.g. *Iron (sắt)*), and groups as *Nhóm VIIIB (8)*.
 - **Always fits the screen**: the table scales to the window; nothing scrolls the page
   (the student list scrolls inside its own box).
-- Screens slide between each other (View Transitions API, with a fallback).
+- Screens slide between each other, and switching *Bảng ⇄ Thẻ bí ẩn* animates too: the old
+  view shrinks away, the table's elements fly in as a wave from H, or the card flips in
+  (View Transitions API, with a fallback).
+- Vietnamese by default; credit *Thực hiện bởi thầy Lê Quang Quí* floats in the bottom-right.
 - Chalk-styled dropdowns, switches and checkboxes instead of the browser defaults.
 - Sound effects with a mute toggle; respects "reduce motion".
 

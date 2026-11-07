@@ -1,33 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
-import { flushSync } from 'react-dom'
 import { ClassesScreen } from './components/ClassesScreen'
 import { SpinScreen } from './components/SpinScreen'
 import { LangProvider, useI18n } from './i18n'
 import { useAppData } from './store'
+import { supportsViewTransitions, viewTransition } from './util'
 
 type View = 'spin' | 'classes'
 
 // Hash-based view so refreshes keep the page and static hosting (Vercel) needs no rewrites.
 const viewFromHash = (): View => (window.location.hash === '#/classes' ? 'classes' : 'spin')
 
-type DocWithVT = Document & { startViewTransition?: (cb: () => void) => unknown }
-const supportsVT = typeof document !== 'undefined' && 'startViewTransition' in document
-if (!supportsVT && typeof document !== 'undefined') document.documentElement.classList.add('no-vt')
+if (!supportsViewTransitions && typeof document !== 'undefined') document.documentElement.classList.add('no-vt')
 
 /** Swap screens with a slide (View Transitions API), falling back to a CSS enter animation. */
 function transition(to: View, apply: () => void) {
-  const doc = document as DocWithVT
-  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-  if (!doc.startViewTransition || reduced) return apply()
-  document.documentElement.dataset.nav = to === 'classes' ? 'forward' : 'back'
-  doc.startViewTransition(() => flushSync(apply))
+  viewTransition(to === 'classes' ? 'forward' : 'back', apply)
 }
 
 function Credit() {
   const { t } = useI18n()
   return (
     <div className="credit">
-      {t('credit')} Le Quang Qui
+      {t('credit')}
     </div>
   )
 }

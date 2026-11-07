@@ -3,7 +3,7 @@ import { CATEGORY_ORDER, ELEMENTS } from '../data/elements'
 import { useI18n } from '../i18n'
 import { playTick, playWin } from '../sound'
 import { elementsOf, ownerOf, today, type AppData, type ClassRoom, type SpinMode } from '../store'
-import { isTypingSpace, prefersReducedMotion, randomInt } from '../util'
+import { isTypingSpace, prefersReducedMotion, randomInt, viewTransition } from '../util'
 import { CardMode } from './CardMode'
 import { ChalkSelect, Switch } from './controls'
 import { PeriodicTable, type CellState, type Owner } from './PeriodicTable'
@@ -235,8 +235,11 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
   }
 
   const setMode = (m: SpinMode) => {
-    resetSpin()
-    setData((d) => ({ ...d, mode: m }))
+    if (m === mode) return
+    viewTransition(`mode-${m}`, () => {
+      resetSpin()
+      setData((d) => ({ ...d, mode: m }))
+    })
   }
 
   const markAbsent = () => {
@@ -343,13 +346,18 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
               {sound ? <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /> : <path d="M17 9l5 6M22 9l-5 6" />}
             </svg>
           </button>
-          <button type="button" className="link-btn" onClick={onManage} disabled={busy}>
-            {t('manageClasses')}
+          <button type="button" className="link-btn manage-link" onClick={onManage} disabled={busy} aria-label={t('manageClasses')} title={t('manageClasses')}>
+            <svg className="manage-link__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span className="manage-link__text">{t('manageClasses')}</span>
           </button>
         </div>
       </header>
 
-      <main className="spin-main">
+      <main className={`spin-main spin-main--${mode}`}>
         {cls && mode === 'card' && students.length > 0 ? (
           <CardMode
             students={students}
@@ -388,6 +396,7 @@ export function SpinScreen({ data, setData, updateClass, onManage }: Props) {
                 </PeriodicTable>
               )}
             </div>
+            {cls && <p className="rotate-hint">{t('rotateHint')}</p>}
 
             {cls && (
               <div className="spin-bar">

@@ -374,7 +374,7 @@ export function ClassesScreen({ data, setData, updateClass, onBack }: Props) {
                         return (
                           <tr key={st.id} className={st.tested ? 'is-tested' : undefined}>
                             <td className="roster__no">{i + 1}</td>
-                            <td>
+                            <td className="roster__owned">
                               <div className="owned">
                                 {owned.map((el) => (
                                   <span
@@ -411,7 +411,7 @@ export function ClassesScreen({ data, setData, updateClass, onBack }: Props) {
                               )}
                             </td>
                             <td className="roster__date">{formatDate(st.lastTestedAt)}</td>
-                            <td>
+                            <td className="roster__checkcell">
                               <input
                                 type="checkbox"
                                 className="roster__check"
@@ -420,7 +420,7 @@ export function ClassesScreen({ data, setData, updateClass, onBack }: Props) {
                                 aria-label={t('testedAria', { name: st.name })}
                               />
                             </td>
-                            <td>
+                            <td className="roster__actcell">
                               <div className="roster__actions">
                                 <button type="button" className="icon-btn" aria-label={t('moveUp', { name: st.name })} onClick={() => move(i, -1)} disabled={i === 0}>
                                   <Svg>{Icon.up}</Svg>

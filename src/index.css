@@ -674,6 +674,7 @@ input[type='checkbox']:checked {
 .backup__hint { margin: 0; font-size: 13px; line-height: 1.45; color: var(--chalk-dim); }
 
 .classes__main {
+  container-type: inline-size;
   flex: 1;
   min-width: 0;
   min-height: 0;
@@ -737,6 +738,9 @@ input[type='checkbox']:checked {
 .roster__name-text { font-size: 17px; font-weight: 600; }
 .roster__date { font-family: var(--hand); font-size: 19px; color: var(--chalk-dim); white-space: nowrap; }
 .roster__actions { display: flex; justify-content: flex-end; gap: 6px; }
+.manage-link { display: inline-flex; align-items: center; gap: 8px; }
+.manage-link__icon { display: none; }
+.rotate-hint { display: none; margin: 0; text-align: center; font-family: var(--hand); font-size: 17px; color: var(--chalk-dim); }
 
 .roster tr.is-tested {
   background: repeating-linear-gradient(135deg, rgba(241, 245, 238, 0.05) 0 4px, transparent 4px 10px);
@@ -885,10 +889,58 @@ input[type='checkbox']:checked {
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   animation-fill-mode: both;
 }
-::view-transition-old(board) { animation-name: board-out-left; }
-::view-transition-new(board) { animation-name: board-in-right; }
+html[data-nav='forward']::view-transition-old(board) { animation-name: board-out-left; }
+html[data-nav='forward']::view-transition-new(board) { animation-name: board-in-right; }
 html[data-nav='back']::view-transition-old(board) { animation-name: board-out-right; }
 html[data-nav='back']::view-transition-new(board) { animation-name: board-in-left; }
+
+/* ---------- Switching between Bảng and Thẻ bí ẩn ---------- */
+/* Only the stage animates; the header stays put. */
+html[data-nav^='mode'] .spin-main { view-transition-name: stage; }
+html[data-nav^='mode']::view-transition-old(board),
+html[data-nav^='mode']::view-transition-new(board) { animation: none; }
+html[data-nav^='mode']::view-transition-old(stage) {
+  animation: stage-out 0.38s cubic-bezier(0.55, 0, 0.75, 0) both;
+}
+/* The new stage shows live, so its own entrance (cells flying in / card flipping in) plays. */
+html[data-nav^='mode']::view-transition-new(stage) { animation: none; }
+html[data-nav='mode-card']::view-transition-old(stage) { animation-name: stage-out-spin; }
+
+@keyframes stage-out {
+  to { opacity: 0; transform: scale(0.9); filter: blur(8px); }
+}
+@keyframes stage-out-spin {
+  to { opacity: 0; transform: perspective(1400px) rotateX(18deg) scale(0.86) translateY(30px); filter: blur(6px); }
+}
+
+/* Table entrance: every element drops in, sweeping from H to the bottom-right. */
+.ptable--enter .cell {
+  animation: cell-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) var(--d, 0ms) backwards;
+}
+.ptable--enter .ptable__inset { animation: fade 0.5s ease 0.45s backwards; }
+@keyframes cell-in {
+  from { opacity: 0; transform: translateY(-18px) scale(0.4) rotate(-12deg); }
+  60% { opacity: 1; }
+}
+
+/* Mystery card entrance: the card flips in, then its clue boxes pop in one after another. */
+.cardmode {
+  perspective: 1600px;
+  animation: card-flip-in 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes card-flip-in {
+  from { opacity: 0; transform: rotateY(-80deg) translateX(-60px) scale(0.85); }
+  50% { opacity: 1; }
+}
+.mcard__tile-col { animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s backwards; }
+.mcard__slots .slot { animation: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+.mcard__slots .slot:nth-child(1) { animation-delay: 0.45s; }
+.mcard__slots .slot:nth-child(2) { animation-delay: 0.55s; }
+.mcard__slots .slot:nth-child(3) { animation-delay: 0.65s; }
+.mcard__student { animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.75s backwards; }
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.85); }
+}
 
 @keyframes board-out-left { to { opacity: 0; transform: translateX(-60px) rotate(-0.6deg); filter: blur(3px); } }
 @keyframes board-out-right { to { opacity: 0; transform: translateX(60px) rotate(0.6deg); filter: blur(3px); } }
@@ -1186,13 +1238,15 @@ html[data-nav='back']::view-transition-new(board) { animation-name: board-in-lef
   justify-content: center;
   container-type: size;
 }
+.cardmode { align-items: safe center; }
 
 .mcard {
-  --tile: clamp(140px, min(54cqh, 26cqw), 330px);
-  width: min(1180px, 100%);
+  --tile: clamp(140px, min(54cqh, 26cqw), 380px);
+  width: min(1400px, 100%);
   max-height: 100%;
+  overflow-y: auto;
   display: flex;
-  align-items: center;
+  align-items: safe center;
   gap: clamp(20px, 4cqw, 52px);
   padding: clamp(18px, 5cqh, 44px) clamp(20px, 4cqw, 52px);
   border-radius: 12px;
@@ -1329,16 +1383,14 @@ html[data-nav='back']::view-transition-new(board) { animation-name: board-in-lef
 }
 .mcard__name-window {
   display: block;
-  height: 1.2em;
+  min-height: 1.15em;
   overflow: hidden;
   font-family: var(--hand);
-  font-size: clamp(36px, 11cqh, 84px);
-  line-height: 1.2;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  font-size: clamp(28px, min(11cqh, 6.4cqw), 92px);
+  line-height: 1.15;
   border-bottom: 3px dashed rgba(241, 245, 238, 0.3);
 }
-.mcard__name { display: inline-block; animation: reel 0.14s ease-out; }
+.mcard__name { display: inline-block; max-width: 100%; overflow-wrap: anywhere; animation: reel 0.14s ease-out; }
 .mcard__student.is-final-roll .mcard__name { color: rgba(241, 245, 238, 0.75); }
 .mcard__student.is-locked .mcard__name-window { border-bottom-style: solid; border-bottom-color: var(--yellow); }
 .mcard__student.is-locked .mcard__name { color: #fff; animation: name-land 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -1353,8 +1405,215 @@ html[data-nav='back']::view-transition-new(board) { animation-name: board-in-lef
 .mcard__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .mcard__marked { font-family: var(--hand); font-size: 22px; color: var(--yellow); }
 
-@media (max-width: 760px) {
-  .mcard { flex-direction: column; overflow-y: auto; }
-  .mcard__slots { grid-template-columns: 1fr 1fr; }
-  .mcard__slots .slot:first-child { grid-column: 1 / -1; }
+
+/* =====================================================================
+   Responsive
+   ===================================================================== */
+
+/* Small table (phones, small windows): the colour key would cover the cells. */
+@container (max-width: 640px) {
+  .ptable__inset { display: none; }
+}
+@container (max-height: 300px) {
+  .ptable__inset { display: none; }
+}
+
+/* Squarish or upright space (tablets, phones): let the table grow taller instead of leaving empty board. */
+@container (max-aspect-ratio: 3 / 2) {
+  .ptable {
+    aspect-ratio: auto;
+    height: min(100cqh, calc(var(--w) * 0.8));
+  }
+  .cell__sym { font-size: calc(var(--w) * 0.026); }
+}
+
+/* Upright phone: narrow, tall cells — drop the tiny numbers. */
+@container (orientation: portrait) and (max-width: 600px) {
+  .ptable {
+    height: min(100cqh, calc(var(--w) * 1.05));
+    gap: 2px;
+  }
+  .cell { padding: 1px; justify-content: center; align-items: center; border-radius: 3px; }
+  .cell__num { display: none; }
+  .cell__sym { font-size: calc(var(--w) * 0.034); }
+  .cell--marker .cell__sym { font-size: calc(var(--w) * 0.016); writing-mode: vertical-rl; }
+}
+
+/* Phones held upright: say how to get a bigger table. */
+@media (orientation: portrait) and (max-width: 600px) {
+  .rotate-hint { display: block; }
+}
+
+/* Compact header + bottom bar on narrow or short screens. */
+@media (max-width: 640px), (max-height: 540px) {
+  .topbar { padding: 10px 16px 6px; gap: 8px 12px; align-items: center; }
+  .chalk-title { font-size: 26px; }
+  .topbar__controls { gap: 8px; }
+  .topbar__controls > .chalk-label { display: none; }
+  .cselect__btn { min-height: 40px; padding: 0 10px 0 12px; }
+  .cselect__value { font-size: 19px; }
+  .seg__btn, .lang__btn { height: 36px; font-size: 17px; padding: 0 10px; }
+  .icon-btn { width: 40px; height: 40px; }
+  .manage-link__icon { display: block; }
+  .manage-link__text { display: none; }
+  .link-btn { font-size: 19px; }
+  .spin-main { padding: 2px 16px 10px; gap: 6px; }
+  .spin-bar { gap: 8px 14px; }
+  .spin-bar__status .chalk-sub { font-size: 14px; }
+  .spin-bar__actions { gap: 12px; }
+  .switch { min-height: 32px; font-size: 13px; gap: 8px; }
+  .switch__track { width: 38px; height: 22px; }
+  .switch__thumb { width: 14px; height: 14px; }
+  .switch--on .switch__thumb { transform: translateX(16px); }
+  .btn--big { min-height: 46px; padding: 0 26px; font-size: 24px; }
+  .landed { padding: 6px 12px; gap: 10px; }
+  .landed__sym { font-size: 28px; }
+  .landed__name { font-size: 19px; }
+  .classes { padding: 8px 16px 14px; gap: 16px; }
+  .chalk-title--lg { font-size: 34px; }
+}
+
+/* Short screens (phone sideways): drop the date line, keep everything on one row. */
+@media (max-height: 540px) {
+  .topbar__title .chalk-sub { display: none; }
+  .spin-bar__status { display: none; }
+  .spin-bar { justify-content: flex-end; }
+  .spin-bar__switches { flex-direction: row; gap: 4px 16px; }
+}
+
+/* Phones upright: bottom bar stacks neatly, Spin button full width. */
+@media (max-width: 600px) and (orientation: portrait) {
+  .spin-bar__actions { width: 100%; justify-content: space-between; }
+  .spin-bar__actions .btn--big { flex: 1; }
+  .spin-bar__status { width: 100%; text-align: center; }
+}
+
+/* ---- Mystery card adapts to the space it actually has ---- */
+/* Narrow: tile + clues side by side on top, the name and the fact underneath. */
+@container (max-width: 760px) {
+  .mcard {
+    --tile: clamp(92px, min(22cqh, 34cqw), 170px);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'tile slots'
+      'student student'
+      'more more';
+    align-items: center;
+    gap: 12px 16px;
+    padding: 14px;
+    border-width: 6px;
+  }
+  .mcard__info { display: contents; }
+  .mcard__tile-col { grid-area: tile; gap: 10px; }
+  .mcard__tile { transform: rotate(-2deg); border-width: 3px; }
+  .mcard__steps li { width: 9px; height: 9px; }
+  .mcard__slots { grid-area: slots; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .mcard__student { grid-area: student; }
+  .mcard__reveal,
+  .mcard__hint { grid-area: more; }
+  .slot { gap: 2px; }
+  .slot__label { font-size: 11px; }
+  .slot__window { height: 34px; line-height: 30px; font-size: 18px; padding: 0 10px; }
+  .mcard__name-window { font-size: clamp(26px, 9cqw, 44px); }
+  .mcard__reveal .winner__fact p { font-size: 14px; line-height: 1.4; }
+  .mcard__reveal .winner__fact-label { font-size: 18px; }
+}
+
+@container (max-height: 380px) and (min-width: 561px) {
+  .mcard {
+    --tile: clamp(80px, 40cqh, 150px);
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
+    padding: 10px 16px;
+    border-width: 6px;
+  }
+  .mcard__tile-col { flex-direction: column; gap: 8px; }
+  .mcard__steps { flex-direction: row; gap: 6px; }
+  .mcard__steps li { width: 9px; height: 9px; }
+  .mcard__slots { grid-template-columns: 1.6fr 1fr 1fr; }
+  .mcard__slots .slot:first-child { grid-column: auto; }
+  .slot__label { font-size: 11px; }
+  .slot__window { height: 34px; line-height: 30px; font-size: 17px; }
+  .mcard__info { gap: 6px; }
+  .mcard__student-label { font-size: 15px; }
+  .mcard__name-window { font-size: clamp(22px, 13cqh, 40px); }
+  .mcard__hint { display: none; }
+  .mcard__reveal { gap: 6px; }
+  .mcard__reveal .winner__fact-label { display: none; }
+  .mcard__reveal .winner__fact p { font-size: 13px; line-height: 1.35; }
+  .mcard__actions .btn--small { min-height: 36px; font-size: 17px; }
+}
+
+/* ---- Winner popup on small / short screens ---- */
+@media (max-width: 600px), (max-height: 560px) {
+  .overlay { padding: 10px; }
+  .winner {
+    --tile: clamp(84px, 20vh, 150px);
+    max-height: calc(100dvh - 20px);
+    gap: 14px 24px;
+    padding: 18px;
+    border-width: 6px;
+  }
+  .winner__tile-wrap { gap: 6px; }
+  .winner__cat { font-size: 16px; }
+  .winner__body { gap: 8px; flex-basis: 300px; }
+  .winner__meta { font-size: 18px; }
+  .winner__name { font-size: clamp(28px, 8vw, 44px); }
+  .winner__fact-label { font-size: 19px; }
+  .winner__fact p { font-size: 15px; line-height: 1.4; }
+  .winner__chips .chip { font-size: 15px; padding: 2px 10px; }
+  .winner__actions { gap: 8px; margin-top: 4px; }
+  .winner__actions .btn { min-height: 42px; padding: 0 14px; font-size: 19px; }
+  .winner__close { top: 8px; right: 8px; }
+}
+
+/* ---- Student list turns into cards when its column is narrow ---- */
+@container (max-width: 760px) {
+  .roster-scroll { overflow-x: hidden; }
+  .roster { min-width: 0; }
+  .roster thead { display: none; }
+  .roster tbody { display: block; }
+  .roster tr {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    grid-template-areas:
+      'no name check'
+      'no owned owned'
+      'no date actions';
+    align-items: center;
+    gap: 6px 10px;
+    padding: 10px 12px;
+    border-top: 1.5px dashed rgba(241, 245, 238, 0.2);
+  }
+  .roster tbody tr:first-child { border-top: none; }
+  .roster td { padding: 0; border: none; }
+  .roster__no { grid-area: no; align-self: start; }
+  .roster__name { grid-area: name; width: auto; }
+  .roster__checkcell { grid-area: check; }
+  .roster__owned { grid-area: owned; }
+  .roster__date { grid-area: date; font-size: 17px; }
+  .roster__actcell { grid-area: actions; }
+  .roster__actions .icon-btn { width: 40px; height: 40px; }
+  .class-head { align-items: flex-start; }
+}
+
+/* Classes page on phones: the class list becomes a row of chips. */
+@media (max-width: 900px) {
+  .class-card { padding: 8px 12px; }
+  .class-card__name { font-size: 22px; }
+  .backup { margin-top: 0; }
+}
+
+/* ---- Import dialog on phones ---- */
+@media (max-width: 600px), (max-height: 540px) {
+  .import { border-width: 6px; padding: 14px; gap: 10px; max-height: calc(100dvh - 20px); }
+  .import .chalk-title--md { font-size: 24px; }
+  .import__head p { font-size: 13px; }
+  .import__text { min-height: 100px; }
+}
+@media (max-height: 540px) {
+  .import__body { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); overflow: hidden; }
+  .import__head p { display: none; }
 }

@@ -1,4 +1,4 @@
-import { memo, useState, type PointerEvent, type ReactNode } from 'react'
+import { memo, useEffect, useState, type CSSProperties, type PointerEvent, type ReactNode } from 'react'
 import { ELEMENTS, type Element } from '../data/elements'
 import { useI18n } from '../i18n'
 
@@ -79,9 +79,19 @@ function Tooltip({ el, rect, owner }: Hover & { owner?: Owner }) {
   )
 }
 
+/** Grid position plus an entrance delay that sweeps diagonally from H to the bottom-right. */
+const cellStyle = (el: Element): CSSProperties =>
+  ({ gridRow: el.row, gridColumn: el.col, '--d': `${Math.round((el.col + el.row * 1.6) * 16)}ms` }) as CSSProperties
+
 function PeriodicTableImpl({ states, owners, showTips, children }: Props) {
   const { t } = useI18n()
   const [hover, setHover] = useState<Hover | null>(null)
+  // Cells fly in once when the table appears (mode switch, class switch, page load).
+  const [entering, setEntering] = useState(true)
+  useEffect(() => {
+    const id = window.setTimeout(() => setEntering(false), 1400)
+    return () => window.clearTimeout(id)
+  }, [])
 
   const onOver = (e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === 'touch') return
@@ -93,14 +103,14 @@ function PeriodicTableImpl({ states, owners, showTips, children }: Props) {
 
   return (
     <>
-      <div className="ptable" role="img" aria-label={t('tableAria')} onPointerOver={onOver} onPointerLeave={() => setHover(null)}>
+      <div className={`ptable${entering ? ' ptable--enter' : ''}`} role="img" aria-label={t('tableAria')} onPointerOver={onOver} onPointerLeave={() => setHover(null)}>
         {ELEMENTS.map((el) => {
           const state = states[el.z] ?? 'off'
           const classes = ['cell', `cell--${state}`]
           if (state === 'on' || state === 'trail' || state === 'mine') classes.push(`cat--${el.category}`)
           if (showTips && hover?.el.z === el.z) classes.push('cell--hover')
           return (
-            <div key={el.z} data-z={el.z} className={classes.join(' ')} style={{ gridRow: el.row, gridColumn: el.col }}>
+            <div key={el.z} data-z={el.z} className={classes.join(' ')} style={cellStyle(el)}>
               <span className="cell__num">{el.z}</span>
               <span className="cell__sym">{el.symbol}</span>
             </div>

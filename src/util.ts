@@ -1,3 +1,5 @@
+import { flushSync } from 'react-dom'
+
 /** Unbiased-enough random integer in [0, max) using the crypto RNG. */
 export function randomInt(max: number) {
   const buf = new Uint32Array(1)
@@ -29,4 +31,19 @@ export function isTypingSpace(e: KeyboardEvent) {
   if (t.isContentEditable || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT') return true
   if (t.tagName === 'INPUT') return !['checkbox', 'radio', 'button', 'submit', 'range'].includes((t as HTMLInputElement).type)
   return !!t.closest('[role="listbox"], [role="dialog"]')
+}
+
+type DocWithVT = Document & { startViewTransition?: (cb: () => void) => unknown }
+
+export const supportsViewTransitions = typeof document !== 'undefined' && 'startViewTransition' in document
+
+/**
+ * Runs a React state change inside a View Transition. `kind` lands on <html data-nav="…">
+ * so the CSS can pick the right animation (screen slide, mode switch…).
+ */
+export function viewTransition(kind: string, apply: () => void) {
+  const doc = document as DocWithVT
+  if (!doc.startViewTransition || prefersReducedMotion()) return apply()
+  document.documentElement.dataset.nav = kind
+  doc.startViewTransition(() => flushSync(apply))
 }

@@ -87,7 +87,7 @@ const en = {
   badBackup: "That file doesn't look like an Element Roulette backup.",
   confirmRestore: 'Replace everything here with the {n} classes from this backup?',
   restored: 'Restored {n} classes from the backup.',
-  credit: 'Made by',
+  credit: 'Made by Mr. Lê Quang Quí',
   modeLabel: 'Mode',
   modeTable: 'Table',
   modeCard: 'Mystery card',
@@ -96,6 +96,7 @@ const en = {
   cardIdle: 'Press Spin — the card reveals the winner one clue at a time.',
   cardRolling: 'Revealing the clues…',
   markedTested: 'Marked as tested',
+  rotateHint: 'Turn your phone sideways for a bigger table — or try Mystery card mode.',
   shareAll: 'Use the whole table',
   shareAllHint: 'On: the table is shared out so every student gets the same number of elements (3 each for 30 students). Off: one element per student.',
   myClassesSubOne: 'Each student gets one element in list order — #1 is H, #2 is He…',
@@ -208,7 +209,7 @@ const vi: Record<Key, string> = {
   badBackup: 'Tệp này không phải bản sao lưu của Element Roulette.',
   confirmRestore: 'Thay toàn bộ dữ liệu hiện tại bằng {n} lớp trong bản sao lưu?',
   restored: 'Đã khôi phục {n} lớp từ bản sao lưu.',
-  credit: 'Thực hiện bởi',
+  credit: 'Thực hiện bởi thầy Lê Quang Quí',
   modeLabel: 'Chế độ',
   modeTable: 'Bảng',
   modeCard: 'Thẻ bí ẩn',
@@ -217,6 +218,7 @@ const vi: Record<Key, string> = {
   cardIdle: 'Nhấn Quay — thẻ sẽ lật dần từng manh mối cho đến người được gọi.',
   cardRolling: 'Đang lật từng manh mối…',
   markedTested: 'Đã đánh dấu kiểm tra',
+  rotateHint: 'Xoay ngang điện thoại để bảng to hơn — hoặc thử chế độ Thẻ bí ẩn.',
   shareAll: 'Dùng cả bảng',
   shareAllHint: 'Bật: chia bảng sao cho mọi em có số nguyên tố bằng nhau (lớp 30 em thì mỗi em 3). Tắt: mỗi em một nguyên tố.',
   myClassesSubOne: 'Mỗi học sinh nhận một nguyên tố theo thứ tự danh sách — #1 là H, #2 là He…',
@@ -262,7 +264,7 @@ const CATEGORY_VI: Record<Category, string> = {
 // Group 1–18 → the A/B labels Vietnamese textbooks also use.
 const GROUP_AB = ['IA', 'IIA', 'IIIB', 'IVB', 'VB', 'VIB', 'VIIB', 'VIIIB', 'VIIIB', 'VIIIB', 'IB', 'IIB', 'IIIA', 'IVA', 'VA', 'VIA', 'VIIA', 'VIIIA']
 
-const LANG_KEY = 'element-roulette:lang'
+const LANG_KEY = 'element-roulette:lang-v2'
 
 function initialLang(): Lang {
   try {
