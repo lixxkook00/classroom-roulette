@@ -3,6 +3,7 @@ import { useI18n } from '../i18n'
 import { deleteMedia } from '../media'
 import { uid, type AppData, type Question, type QuestionMedia, type QuestionSet } from '../store'
 import { draftFrom, draftReady, emptyDraft, resolveDraft, type MediaDraft } from '../mediaDraft'
+import { FormulaTextarea } from './FormulaTextarea'
 import { MediaField } from './MediaField'
 import { MediaBadge, MediaView } from './MediaView'
 
@@ -177,13 +178,13 @@ export function QuestionSetsPanel({ data, setData }: Props) {
                   <label htmlFor="q-text" className="qform__label">
                     {editingIndex >= 0 ? t('qEditing', { n: editingIndex + 1 }) : t('qText')}
                   </label>
-                  <textarea
+                  <FormulaTextarea
                     id="q-text"
                     ref={textRef}
                     className="chalk-input chalk-textarea qform__text"
                     rows={2}
                     value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    onChange={setText}
                     placeholder={t('qTextPlaceholder')}
                   />
                   <MediaField id="q-media" draft={qMedia} onChange={setQMedia} />
@@ -192,12 +193,12 @@ export function QuestionSetsPanel({ data, setData }: Props) {
                   <label htmlFor="q-answer" className="qform__label qform__label--answer">
                     {t('qAnswer')}
                   </label>
-                  <textarea
+                  <FormulaTextarea
                     id="q-answer"
                     className="chalk-input chalk-textarea qform__answer"
                     rows={2}
                     value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
+                    onChange={setAnswer}
                     placeholder={t('qAnswerPlaceholder')}
                   />
                   <MediaField id="a-media" draft={aMedia} onChange={setAMedia} />
