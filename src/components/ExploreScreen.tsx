@@ -5,6 +5,7 @@ import { NAME_VI_EXTRA } from '../data/facts.vi'
 import { useI18n } from '../i18n'
 import { QrIcon } from './chemText'
 import { ElementDetail } from './ElementDetail'
+import { useLandscape } from '../rotate'
 import { studentUrl } from '../util'
 import { PeriodicTable, type CellState } from './PeriodicTable'
 
@@ -32,6 +33,7 @@ export function ExploreScreen({ canShare }: { canShare: boolean }) {
   const [qrOpen, setQrOpen] = useState(false)
 
   const found = useMemo(() => ELEMENTS.filter((el) => matches(el, query)), [query])
+  const landscape = useLandscape()
 
   const states = useMemo(() => {
     const s: Record<number, CellState> = {}
@@ -111,6 +113,15 @@ export function ExploreScreen({ canShare }: { canShare: boolean }) {
         {filter && (
           <button type="button" className="btn btn--link btn--small" onClick={() => setFilter(null)}>
             {t('filterAll')}
+          </button>
+        )}
+        {landscape.available && !landscape.active && (
+          <button type="button" className="btn btn--small rotate-cta" onClick={landscape.toggle}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="7" y="2.5" width="10" height="17" rx="2" transform="rotate(-90 12 11)" />
+              <path d="M3 17a9 9 0 0 0 9 4.5M12 21.5l-1.6-2.2M12 21.5l-2.4 1" />
+            </svg>
+            {t('rotateCta')}
           </button>
         )}
       </main>

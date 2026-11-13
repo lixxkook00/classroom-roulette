@@ -5,6 +5,7 @@ import { GuessScreen, type SharedSet } from './components/GuessScreen'
 import { PinDialog } from './components/PinDialog'
 import { LangProvider, useI18n } from './i18n'
 import { cleanElements, useAppData, type QuestionSet } from './store'
+import { useLandscape } from './rotate'
 import { supportsViewTransitions, viewTransition } from './util'
 
 /** Tabs, in the order they appear (also decides which way the board slides). */
@@ -51,7 +52,7 @@ function saveUnlock(on: boolean, remember = true) {
   }
 }
 
-const ICONS: Record<View | 'lock' | 'key', ReactNode> = {
+const ICONS: Record<View | 'lock' | 'key' | 'rotate', ReactNode> = {
   spin: (
     <>
       <circle cx="12" cy="12" r="9" />
@@ -93,6 +94,12 @@ const ICONS: Record<View | 'lock' | 'key', ReactNode> = {
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
     </>
   ),
+  rotate: (
+    <>
+      <rect x="7" y="2.5" width="10" height="17" rx="2" transform="rotate(-90 12 11)" />
+      <path d="M3 17a9 9 0 0 0 9 4.5M12 21.5l-1.6-2.2M12 21.5l-2.4 1" />
+    </>
+  ),
   key: (
     <>
       <circle cx="8" cy="15" r="4" />
@@ -124,6 +131,7 @@ function TabIcon({ name }: { name: keyof typeof ICONS }) {
 function Tabs({ view, teacher, onTeacher, onLock }: { view: View; teacher: boolean; onTeacher: () => void; onLock: () => void }) {
   const { t } = useI18n()
   const views = teacher ? VIEWS : STUDENT_VIEWS
+  const landscape = useLandscape()
   return (
     <nav className="tabs" aria-label={t('tabsAria')}>
       {views.map((v) => (
@@ -139,6 +147,18 @@ function Tabs({ view, teacher, onTeacher, onLock }: { view: View; teacher: boole
         </a>
       ))}
       <span className="tabs__spacer" />
+      {landscape.available && (
+        <button
+          type="button"
+          className={`tab tab--tool${landscape.active ? ' tab--on-tool' : ''}`}
+          onClick={landscape.toggle}
+          title={t(landscape.active ? 'rotateOff' : 'rotateOn')}
+          aria-label={t(landscape.active ? 'rotateOff' : 'rotateOn')}
+          aria-pressed={landscape.active}
+        >
+          <TabIcon name="rotate" />
+        </button>
+      )}
       {teacher ? (
         <button type="button" className="tab tab--tool" onClick={onLock} title={t('lockTitle')} aria-label={t('lockTitle')}>
           <TabIcon name="lock" />

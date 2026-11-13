@@ -556,7 +556,7 @@ export default function ElementStage({ z, view, shellLabels }: Props) {
         dispose: () => controls.dispose(),
       }
     },
-    1.75,
+    2,
   )
 
   return (

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useI18n } from '../i18n'
 import { playCorrect, playWrong } from '../sound'
 import { perfFlags } from '../perf'
+import { viewportSize } from '../rotate'
 import { prefersReducedMotion } from '../util'
 
 interface Props {
@@ -57,8 +58,7 @@ export function Celebration({ kind, studentName, sound, onDone }: Props) {
     const perf = perfFlags(2)
     const dpr = perf.dpr
     const k = perf.particles
-    const W = window.innerWidth
-    const H = window.innerHeight
+    const { w: W, h: H } = viewportSize()
     canvas.width = W * dpr
     canvas.height = H * dpr
     ctx.scale(dpr, dpr)

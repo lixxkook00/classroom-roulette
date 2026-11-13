@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { AtomKind, Molecule } from '../../data/organic'
+import { layoutRect } from '../../rotate'
 import { prefersReducedMotion } from '../../util'
 import { easeInOut, lerp, textSprite, textTexture, useThree, YELLOW } from './three/common'
 
@@ -162,7 +163,7 @@ export function Molecule3D({ mol, formula = false, showGroup = false, groupLabel
       const ray = new THREE.Raycaster()
       const ndc = new THREE.Vector2()
       const pick = (ev: PointerEvent): string | null => {
-        const r = canvas.getBoundingClientRect()
+        const r = layoutRect(canvas)
         ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1)
         ray.setFromCamera(ndc, camera)
         const hit = ray.intersectObjects(

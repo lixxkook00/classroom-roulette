@@ -135,6 +135,12 @@ The lab tab loads three.js on demand (its own chunk), so the other tabs stay lig
 - Students' phones only download the table and the game: the teacher screens, the QR code library, the organic lab and
   three.js are separate chunks loaded when first used.
 
+## Phones
+
+- **Rotate button** (top bar, on touch devices held upright, also under the periodic table): shows the app in landscape. On Android it uses real fullscreen + orientation lock; on iPhone (which can't lock) the whole app is rotated 90° in place, with media queries, `vh/vw` and 3-D touches remapped (`src/rotate.ts`). Tap again to go back. Turning the phone physically also works.
+- **3-D quality**: phones are no longer treated as low-end by default (they usually show one model at a time), and canvases render at up to 2× pixel ratio. The frame-rate watchdog still drops a struggling phone to low quality automatically.
+- Layouts: element popup goes side-by-side in landscape; the lab puts experiment chips in a row with the 3-D scene first.
+
 ## Run it locally
 
 ```bash

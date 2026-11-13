@@ -3133,3 +3133,84 @@ html[data-nav='question']::view-transition-new(winner-box) { animation: q-in 0.4
 }
 @media (prefers-reduced-motion: reduce) {
 }
+
+/* =====================================================================
+   Phones
+   ===================================================================== */
+
+/* "Xoay ngang" on phones that can't lock orientation (iPhone): the whole app turned 90°.
+   rotate.ts sets --rot-w/--rot-h and swaps media queries + vh/vw so the layout sees a landscape screen. */
+html.rotated #root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--rot-w);
+  height: var(--rot-h);
+  transform-origin: 0 0;
+  transform: translateX(var(--rot-h)) rotate(90deg);
+}
+.tab--on-tool { color: var(--yellow); background: rgba(0, 0, 0, 0.32); }
+
+/* Upright phone on the periodic table: table at the top, a clear "rotate" button under it */
+.rotate-cta { display: none; }
+@media (orientation: portrait) and (max-width: 600px) {
+  .rotate-cta { display: inline-flex; border-color: var(--yellow); color: var(--yellow); }
+  .table-area { flex: 0 1 auto; aspect-ratio: 18 / 9.2; }
+  .spin-main:has(.rotate-cta) { justify-content: center; }
+}
+
+/* Element card on a short landscape screen: atom on the left, information on the right,
+   each column scrolling on its own, so rotating the phone shows everything at once. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .overlay:has(> .edetail) { padding: 8px 64px; }
+  .edetail {
+    --atom: min(calc(100dvh - 130px), 34vw);
+    flex-wrap: nowrap;
+    align-items: stretch;
+    height: calc(100dvh - 16px);
+    max-height: none;
+    max-width: 100%;
+    overflow: hidden;
+    gap: 16px;
+    padding: 10px 14px;
+  }
+  .edetail__atom { flex: 0 0 auto; overflow-y: auto; gap: 8px; }
+  .estage__seg .seg__btn { min-width: 0; height: 34px; font-size: 16px; }
+  .edetail__body { flex: 1 1 auto; overflow-y: auto; min-height: 0; padding-right: 4px; }
+  .edetail__nav { top: 50%; bottom: auto; margin-top: -22px; }
+  .edetail__nav--prev { left: 10px; }
+  .edetail__nav--next { right: 10px; }
+}
+
+/* Lab on a phone: the 3-D experiment first, experiments as a row of chips above it */
+@media (max-width: 820px) {
+  .lab-grid--react { grid-template-columns: 1fr; }
+  .react-list { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 6px; padding-bottom: 4px; scrollbar-width: none; }
+  .react-list::-webkit-scrollbar { display: none; }
+  .react-list__btn { flex: 0 0 auto; min-height: 44px; padding: 4px 12px 4px 6px; font-size: 17px; white-space: nowrap; }
+  .react-list__n { width: 26px; height: 26px; font-size: 15px; }
+  .lab-grid--react .lab-stage { min-height: 52vh; }
+  .lab-grid--react .cv--scene { max-height: 50vh; }
+  .lab-actions { min-height: 52px; }
+  .lab-actions .btn--big { min-height: 48px; font-size: 22px; }
+}
+/* Lab on a short landscape phone: chips across the top, scene and explanation side by side */
+@media (orientation: landscape) and (max-height: 540px) {
+  .lab .topbar { padding-top: 6px; padding-bottom: 4px; }
+  .lab .chalk-sub { display: none; }
+  .lab .topbar { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  .lab .chalk-title { font-size: 24px; }
+  .lab .topbar__controls { display: contents; }
+  .lab .lab-lesson .chalk-select__btn, .lab .lab-lesson button { min-height: 38px; font-size: 17px; padding-top: 2px; padding-bottom: 2px; }
+  .lab .lab-parts { flex: 1 1 100%; display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .lab .lab-parts .seg__btn { flex: 1 0 auto; min-height: 38px; padding: 2px 12px; font-size: 17px; white-space: nowrap; }
+  .lab-grid--react { grid-template-columns: minmax(0, 1fr) minmax(240px, 0.9fr); grid-template-rows: auto minmax(0, 1fr); height: 100%; }
+  .lab-grid--react .react-list { grid-column: 1 / -1; flex-direction: row; overflow-x: auto; flex-wrap: nowrap; }
+  .lab-grid--react .react-list__btn { flex: 0 0 auto; min-height: 40px; white-space: nowrap; font-size: 16px; }
+  .lab .topbar__title { flex: 0 1 auto; width: auto; }
+  .lab .lab-lesson { flex: 0 1 300px; width: auto; }
+  .lab-grid--react { height: auto; }
+  .lab-grid--react .lab-stage { min-height: 0; height: calc(100dvh - 120px); }
+  .lab-grid--react .cv--scene { max-height: none; height: 100%; aspect-ratio: auto; }
+  .lab-grid--react .lab-side { max-height: calc(100dvh - 120px); overflow-y: auto; }
+}

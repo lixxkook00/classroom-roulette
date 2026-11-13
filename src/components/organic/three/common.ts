@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { formatFormulas } from '../../../chemFormat'
 import { perfFlags, QUALITY_EVENT, reportSlowDevice, type PerfFlags } from '../../../perf'
+import { mapPointer } from '../../../rotate'
 
 /* Shared WebGL plumbing for the lab: renderer, environment lighting, text sprites, a render loop. */
 
@@ -170,6 +171,12 @@ export function useThree(wrapRef: RefObject<HTMLDivElement | null>, canvasRef: R
     const ctx: ThreeCtx = { renderer, scene, camera, canvas, env, perf }
     const app = buildRef.current(ctx)
 
+    // In forced landscape (CSS-rotated app) touches must be mapped into the rotated frame before
+    // OrbitControls and picking see them: capture phase on the wrapper runs first.
+    const remap = (e: Event) => mapPointer(e as PointerEvent)
+    const POINTER = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'] as const
+    POINTER.forEach((t) => wrap.addEventListener(t, remap, true))
+
     // Pause when scrolled out of view (phones, the comparison table).
     let visible = true
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting), { threshold: 0.02 })
@@ -186,9 +193,9 @@ export function useThree(wrapRef: RefObject<HTMLDivElement | null>, canvasRef: R
     window.addEventListener(QUALITY_EVENT, onQuality)
 
     const fit = () => {
-      const r = wrap.getBoundingClientRect()
-      const w = Math.max(1, Math.round(r.width))
-      const h = Math.max(1, Math.round(r.height))
+      // layout size, not the screen box: under the CSS rotation getBoundingClientRect swaps w and h
+      const w = Math.max(1, Math.round(wrap.clientWidth))
+      const h = Math.max(1, Math.round(wrap.clientHeight))
       renderer.setSize(w, h, false)
       camera.aspect = w / h
       camera.updateProjectionMatrix()
@@ -245,6 +252,7 @@ export function useThree(wrapRef: RefObject<HTMLDivElement | null>, canvasRef: R
       cancelAnimationFrame(raf)
       ro.disconnect()
       io.disconnect()
+      POINTER.forEach((t) => wrap.removeEventListener(t, remap, true))
       window.removeEventListener(QUALITY_EVENT, onQuality)
       app.dispose?.()
       disposeTree(scene)

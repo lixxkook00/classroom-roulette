@@ -1054,7 +1054,7 @@ export function SceneCanvas({ scene, phase, popped }: { scene: Scene; phase: Pha
         },
       }
     },
-    1.5,
+    2,
   )
 
   return (

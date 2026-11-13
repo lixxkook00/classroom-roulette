@@ -49,24 +49,28 @@ function heuristic(): Quality {
   if (heuristicCache) return heuristicCache
   let low = false
   const nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } }
-  if ((nav.hardwareConcurrency || 8) <= 4) low = true
-  if (nav.deviceMemory !== undefined && nav.deviceMemory <= 4) low = true
-  if (nav.connection?.saveData) low = true
-  if (window.matchMedia?.('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 900) low = true
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) low = true
-  if (!low) {
-    // Known weak GPUs
-    try {
-      const c = document.createElement('canvas')
-      const gl = (c.getContext('webgl2') || c.getContext('webgl')) as WebGLRenderingContext | null
-      const ext = gl?.getExtension('WEBGL_debug_renderer_info')
-      const name = ext && gl ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : ''
-      if (/SwiftShader|llvmpipe|Mali-4|Mali-T|Mali-G[1-5]\d\b|Adreno \(TM\) [1-5]\d\d|PowerVR|Intel\(R\) HD Graphics( [2-5]\d\d\d)?$|GMA/i.test(name)) low = true
-      gl?.getExtension('WEBGL_lose_context')?.loseContext()
-    } catch {
-      /* ignore */
-    }
+  // Phones are NOT low-end by default: they usually show one 3-D model at a time, and recent phone GPUs
+  // handle that easily. The frame-rate watchdog still catches a phone that really struggles.
+  let gpu = ''
+  try {
+    const c = document.createElement('canvas')
+    const gl = (c.getContext('webgl2') || c.getContext('webgl')) as WebGLRenderingContext | null
+    const ext = gl?.getExtension('WEBGL_debug_renderer_info')
+    gpu = ext && gl ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : ''
+    gl?.getExtension('WEBGL_lose_context')?.loseContext()
+  } catch {
+    /* ignore */
   }
+  // Apple GPUs (iPhone, iPad, M-series Macs) are fast; Safari also hides core count and memory.
+  const apple = /Apple/i.test(gpu) || /iPhone|iPad/.test(navigator.userAgent)
+  if (!apple) {
+    if ((nav.hardwareConcurrency || 8) <= 2) low = true
+    if (nav.deviceMemory !== undefined && nav.deviceMemory <= 2) low = true
+  }
+  if (nav.connection?.saveData) low = true
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) low = true
+  // Known weak GPUs (old Intel HD on school laptops, entry-level Android GPUs, software rendering)
+  if (/SwiftShader|llvmpipe|Mali-4|Mali-T|Mali-G[1-5]\d\b|Adreno \(TM\) [1-4]\d\d|PowerVR|Intel\(R\) HD Graphics( [2-5]\d\d\d)?$|GMA/i.test(gpu)) low = true
   heuristicCache = low ? 'low' : 'high'
   return heuristicCache
 }
@@ -75,14 +79,19 @@ function heuristic(): Quality {
 export function quality(): Quality {
   const s = qualitySetting()
   if (s !== 'auto') return s
-  if (read(MEASURED_KEY) === 'low') return 'low'
+  const measured = read(MEASURED_KEY)
+  if (measured) {
+    const at = Number(measured.split(':')[1] || 0)
+    if (Date.now() - at < 14 * 864e5) return 'low'
+    write(MEASURED_KEY, null)
+  }
   return heuristic()
 }
 
 /** Called by a render loop that measured a sustained low frame rate. */
 export function reportSlowDevice() {
   if (quality() === 'low') return
-  write(MEASURED_KEY, 'low')
+  write(MEASURED_KEY, `low:${Date.now()}`)
   window.dispatchEvent(new Event(QUALITY_EVENT))
 }
 
@@ -103,7 +112,7 @@ export function perfFlags(maxDpr = 2): PerfFlags {
   const low = q === 'low'
   return {
     quality: q,
-    dpr: Math.min(maxDpr, low ? 1 : window.devicePixelRatio || 1),
+    dpr: Math.min(maxDpr, low ? Math.min(1.5, window.devicePixelRatio || 1) : window.devicePixelRatio || 1),
     shadows: !low,
     antialias: !low,
     fps: low ? 30 : 60,
