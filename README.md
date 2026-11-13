@@ -47,11 +47,48 @@ fun fact about their element.
   saved, so a refresh doesn't lose them.
 - **Element sets** (*Lớp học → Bộ nguyên tố*): click elements on the table (or a whole group from
   the colour key, or "1–20") to build your own lists for *Đoán nguyên tố*.
-- **Tabs**: *Trả lời câu hỏi* · *Bảng tuần hoàn* · *Đoán nguyên tố* · *Lớp học*. Each tab has its own
-  link (`/#/table`, `/#/guess`, `/#/classes`), so students can be sent straight to one.
+- **Tabs**: *Trả lời câu hỏi* · *Bảng tuần hoàn* · *Đoán nguyên tố* · *Lab hữu cơ* · *Lớp học*. Each tab has its own
+  link (`/#/table`, `/#/guess`, `/#/lab`, `/#/classes`), so students can be sent straight to one.
+- **Lab hữu cơ** (organic chemistry lab, students can open it too): pick the lesson at the top
+  (*Bài 26 · Ethylic alcohol*, *Bài 27 · Acetic acid*); the link remembers it (`/#/lab?bai=27`) and the teacher's
+  **Chia sẻ** button shows a QR code for it. Each lesson gets the parts its data has:
+  1. *Phân tử*: a 3-D ball-and-stick model (WebGL, three.js) — it turns by itself, drag to spin it, tap atoms;
+     **Tìm nhóm –OH / –COOH** circles the functional group,
+     **Đếm nguyên tử** counts into the molecular formula, and it morphs into the structural formula.
+  2. *So sánh*: the "Phiếu học tập số 1" table (ethane · ethylic alcohol · acetic acid) with the lesson's column
+     hidden as "……" — tap a cell to reveal it.
+  3. *Độ cồn* (Bài 26): pour ethanol and water into a beaker; *Thử thách* asks "add how much water for 25°?"
+     or "make 200 mL of 60°" and shows the worked solution.
+  4. *Thí nghiệm*: 3-D experiments (WebGL) — glassware and a stand on a lit bench with shadows, particle flames that
+     light the scene, rising bubbles, falling and dissolving solids, drops, indicator paper and an inflating balloon — burning, sodium (+ burning splint "pop"), fermentation, litmus,
+     Mg, CuO with heating, NaOH + phenolphthalein, limestone. Products stay **?** until the reaction plays.
+  5. *Ai phản ứng?*: the class picks which substances react (e.g. Zn, KOH, ZnO, NaCl, MgCO₃, Cu), then **Kiểm tra**
+     shows right/wrong with equations.
+  6. *Luyện tập*: true/false and A–D questions from the lesson plan, filterable by *Tiết 1/2/3*, with sounds and a
+     score (keys Đ/S or A–D, Space = next). Teachers get **🎯 Đưa vào "Trả lời câu hỏi"**, which saves the
+     questions as a question set and selects it, so the spin picks who answers.
+
+### Adding an organic chemistry lesson
+
+Lessons are plain data in `src/data/organic/` — no component code needed:
+
+1. Copy `lessons/bai27-acetic-acid.ts` to e.g. `lessons/bai28-chat-beo.ts` and change the content
+   (title, facts, reactions, `whoReacts`, quiz). Types and comments are in `types.ts`.
+2. If the lesson's molecule isn't in `molecules.ts` yet, add it there (atoms with `p: [x, y, z]` in Å for the
+   3-D model and x/y in a 640 × 400 box for the structural formula, bonds with `2`/`3` for double/triple bonds,
+   and the functional group to circle).
+   Already there: methane, ethane, ethylene, acetylene, methyl alcohol, ethylic alcohol, acetic acid.
+3. Import it in `src/data/organic/index.ts` and add it to `LESSONS`.
+
+The lab tab loads three.js on demand (its own chunk), so the other tabs stay light. Experiments are described, not drawn: a `tube` scene takes a liquid (colour before/after), an optional solid
+(`pellet`, `ribbon`, `powder`, `chunk`), drops from a dropper, indicator paper, heating, bubbles and a splint test;
+`burn` and `ferment` cover burning and fermentation.
 - **Smart periodic table** (*Bảng tuần hoàn thông minh*, for students): click any element for
   its name with IPA (phiên âm) and an English pronunciation button — UK or US accent, normal or
-  slow (browser voices), an animated Bohr atom with p⁺/n⁰/e⁻ and electrons per shell,
+  slow (browser voices), a 3-D stage (WebGL, loaded on demand) with two views — *Nguyên tử*: a nucleus of
+  protons and neutrons with electrons orbiting on tilted shells (drag to turn), and *Ngoài đời*: what the element
+  looks like in real life (a lump or bar of metal, crystals, powder, a glowing gas tube, a liquid, mercury beads…)
+  with one line on where students meet it (`src/data/looks.ts`) — p⁺/n⁰/e⁻ counts and electrons per shell,
   atomic number, mass, period/group, state at 25 °C, electron configuration, fun fact and key
   equations (with conditions like t°, xt). Search by symbol, English or Vietnamese name or
   number (accents optional); click the colour key to filter by group; ← → moves between elements.
@@ -87,6 +124,16 @@ fun fact about their element.
 - Vietnamese by default; credit *Thực hiện bởi thầy Lê Quang Quí* floats in the bottom-right.
 - Chalk-styled dropdowns, switches and checkboxes instead of the browser defaults.
 - Sound effects with a mute toggle; respects "reduce motion".
+
+## Performance on old devices
+
+- **Đồ hoạ 3D** (*Lớp học*, left column): *Tự động / Nhẹ / Đầy đủ*. Auto looks at the device (cores, memory, GPU name,
+  phone) and, if a 3-D canvas still cannot hold ~30 fps, switches the whole app to *Nhẹ* and remembers it on that
+  device. *Nhẹ* = pixel ratio 1, no shadows or antialiasing, 30 fps, fewer particles, still thumbnails. A link with
+  `?q=low` or `?q=high` forces it once (`src/perf.ts`).
+- 3-D canvases pause when the tab is hidden or the canvas is scrolled out of view.
+- Students' phones only download the table and the game: the teacher screens, the QR code library, the organic lab and
+  three.js are separate chunks loaded when first used.
 
 ## Run it locally
 

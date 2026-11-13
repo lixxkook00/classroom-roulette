@@ -85,6 +85,28 @@ function Tooltip({ el, rect, owner, showOwner }: Hover & { owner?: Owner; showOw
 const cellStyle = (el: Element): CSSProperties =>
   ({ gridRow: el.row, gridColumn: el.col, '--d': `${Math.round((el.col + el.row * 1.6) * 16)}ms` }) as CSSProperties
 
+/** One element tile. Memoised so a spin tick only re-renders the few cells whose state changed. */
+const Cell = memo(function Cell({ el, state, hovered, label, onPick }: { el: Element; state: CellState; hovered: boolean; label?: string; onPick?: (z: number) => void }) {
+  const classes = ['cell', `cell--${state}`]
+  if (state === 'on' || state === 'trail' || state === 'mine' || state === 'dim') classes.push(`cat--${el.category}`)
+  if (hovered) classes.push('cell--hover')
+  const inner = (
+    <>
+      <span className="cell__num">{el.z}</span>
+      <span className="cell__sym">{el.symbol}</span>
+    </>
+  )
+  return onPick ? (
+    <button type="button" data-z={el.z} className={`${classes.join(' ')} cell--btn`} style={cellStyle(el)} aria-label={label} onClick={() => onPick(el.z)}>
+      {inner}
+    </button>
+  ) : (
+    <div data-z={el.z} className={classes.join(' ')} style={cellStyle(el)}>
+      {inner}
+    </div>
+  )
+})
+
 function PeriodicTableImpl({ states, owners, showTips, children, onPick }: Props) {
   const { t, elName } = useI18n()
   const [hover, setHover] = useState<Hover | null>(null)
@@ -112,35 +134,9 @@ function PeriodicTableImpl({ states, owners, showTips, children, onPick }: Props
         onPointerOver={onOver}
         onPointerLeave={() => setHover(null)}
       >
-        {ELEMENTS.map((el) => {
-          const state = states[el.z] ?? 'off'
-          const classes = ['cell', `cell--${state}`]
-          if (state === 'on' || state === 'trail' || state === 'mine' || state === 'dim') classes.push(`cat--${el.category}`)
-          if (showTips && hover?.el.z === el.z) classes.push('cell--hover')
-          const inner = (
-            <>
-              <span className="cell__num">{el.z}</span>
-              <span className="cell__sym">{el.symbol}</span>
-            </>
-          )
-          return onPick ? (
-            <button
-              key={el.z}
-              type="button"
-              data-z={el.z}
-              className={`${classes.join(' ')} cell--btn`}
-              style={cellStyle(el)}
-              aria-label={`${el.z} ${el.symbol} ${elName(el)}`}
-              onClick={() => onPick(el.z)}
-            >
-              {inner}
-            </button>
-          ) : (
-            <div key={el.z} data-z={el.z} className={classes.join(' ')} style={cellStyle(el)}>
-              {inner}
-            </div>
-          )
-        })}
+        {ELEMENTS.map((el) => (
+          <Cell key={el.z} el={el} state={states[el.z] ?? 'off'} hovered={showTips && hover?.el.z === el.z} label={onPick ? `${el.z} ${el.symbol} ${elName(el)}` : undefined} onPick={onPick} />
+        ))}
         {children && <div className="ptable__inset">{children}</div>}
         <div className="cell cell--marker" style={{ gridRow: 6, gridColumn: 3 }} aria-hidden="true">
           <span className="cell__sym">57–71</span>

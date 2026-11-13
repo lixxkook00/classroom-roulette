@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState, type ReactNode } from 'react'
 import { electronConfig, equationsFor, matterState, neutronCount, shellCounts } from '../data/chem'
 import { ELEMENTS } from '../data/elements'
 import { NAME_VI_EXTRA } from '../data/facts.vi'
+import { lookOf } from '../data/looks'
 import { englishName, ipa } from '../data/pronunciation'
 import { useI18n } from '../i18n'
 import { canSpeak, speakEnglish, useAccent, useHasVoice } from '../speech'
 import { BohrAtom } from './BohrAtom'
+import type { StageView } from './atom3d/ElementStage'
 import { ConfigView, EquationView, SpeakerIcon } from './chemText'
 
 interface Props {
@@ -13,6 +15,12 @@ interface Props {
   onClose: () => void
   onNavigate: (z: number) => void
 }
+
+// WebGL stage (three.js) loads on demand; the SVG atom shows until it arrives.
+const ElementStage = lazy(() => import('./atom3d/ElementStage'))
+const VIEW_KEY = 'element-roulette:atom-view'
+const SHELL_LETTERS = ['K', 'L', 'M', 'N', 'O', 'P', 'Q']
+const FORM_KEY = { nugget: 'formNugget', ingot: 'formIngot', crystal: 'formCrystal', powder: 'formPowder', gas: 'formGas', liquid: 'formLiquid', droplets: 'formDroplets', unknown: 'formUnknown' } as const
 
 const STATE_KEY = { gas: 'stateGas', liquid: 'stateLiquid', solid: 'stateSolid', unknown: 'stateUnknown' } as const
 
@@ -62,9 +70,27 @@ export function ElementDetail({ z, onClose, onNavigate }: Props) {
   const hasVoice = useHasVoice(accent)
   const [speaking, setSpeaking] = useState<'normal' | 'slow' | null>(null)
   const name = englishName(el.symbol, el.name, accent)
+  const look = lookOf(z)
+  const [view, setViewState] = useState<StageView>(() => {
+    try {
+      return localStorage.getItem(VIEW_KEY) === 'real' ? 'real' : 'atom'
+    } catch {
+      return 'atom'
+    }
+  })
+  const setView = (v: StageView) => {
+    setViewState(v)
+    try {
+      localStorage.setItem(VIEW_KEY, v)
+    } catch {
+      /* ignore */
+    }
+  }
 
   useEffect(() => {
-    closeRef.current?.focus({ preventScroll: true })
+    // Focus after the popup has painted: focusing forces a layout that would delay its first frame.
+    const raf = requestAnimationFrame(() => closeRef.current?.focus({ preventScroll: true }))
+    return () => cancelAnimationFrame(raf)
   }, [])
 
   useEffect(() => {
@@ -90,35 +116,60 @@ export function ElementDetail({ z, onClose, onNavigate }: Props) {
       <button type="button" className="edetail__nav edetail__nav--prev" aria-label={t('prevElement')} disabled={z === 1} onClick={() => onNavigate(z - 1)}>
         ‹
       </button>
-      <div className={`edetail cat--${el.category}`} role="dialog" aria-modal="true" aria-labelledby="edetail-name" key={z}>
+      <div className={`edetail cat--${el.category}`} role="dialog" aria-modal="true" aria-labelledby="edetail-name">
         <button ref={closeRef} type="button" className="icon-btn edetail__close" aria-label={t('close')} onClick={onClose}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
             <path d="M6 6l12 12M18 6L6 18" />
           </svg>
         </button>
 
-        {/* Left: the atom */}
+        {/* Left: the 3-D stage — atom model or the element in real life */}
         <div className="edetail__atom">
-          <BohrAtom z={z} symbol={el.symbol} />
-          <div className="particles">
-            <span className="particle particle--p">
-              <b>{el.z}</b> p<sup>+</sup>
-            </span>
-            <span className="particle particle--n">
-              <b>{neutronCount(el)}</b> n<sup>0</sup>
-            </span>
-            <span className="particle particle--e">
-              <b>{el.z}</b> e<sup>−</sup>
-            </span>
-          </div>
-          <span className="shells" title={t('shellsLabel')}>
-            {shells.map((n, i) => (
-              <span key={i}>
-                <small>{'KLMNOPQ'[i]}</small>
-                {n}
-              </span>
+          <div className="seg estage__seg" role="group" aria-label={t('viewLabel')}>
+            {(['atom', 'real'] as const).map((v) => (
+              <button key={v} type="button" className={`seg__btn${view === v ? ' seg__btn--on' : ''}`} aria-pressed={view === v} onClick={() => setView(v)}>
+                {t(v === 'atom' ? 'viewAtom' : 'viewReal')}
+              </button>
             ))}
-          </span>
+          </div>
+          <div className="estage">
+            <Suspense fallback={view === 'atom' ? <BohrAtom z={z} symbol={el.symbol} /> : <div className="estage__wait" />}>
+              <ElementStage z={z} view={view} shellLabels={SHELL_LETTERS} />
+            </Suspense>
+            <span className="estage__hint">{t('dragHint')}</span>
+          </div>
+          {view === 'real' ? (
+            <div className="elook">
+              <div className="elook__chips">
+                <span className={`chip cat-text--${el.category}`}>{t(FORM_KEY[look.form])}</span>
+                <span className="chip">{t(STATE_KEY[state])}</span>
+                {look.radioactive && <span className="chip chip--warn">☢ {t('radioactive')}</span>}
+              </div>
+              <p className="elook__text">{lang === 'vi' ? look.vi : look.en}</p>
+            </div>
+          ) : (
+            <>
+              <div className="particles">
+                <span className="particle particle--p">
+                  <b>{el.z}</b> p<sup>+</sup>
+                </span>
+                <span className="particle particle--n">
+                  <b>{neutronCount(el)}</b> n<sup>0</sup>
+                </span>
+                <span className="particle particle--e">
+                  <b>{el.z}</b> e<sup>−</sup>
+                </span>
+              </div>
+              <span className="shells" title={t('shellsLabel')}>
+                {shells.map((n, i) => (
+                  <span key={i}>
+                    <small>{SHELL_LETTERS[i]}</small>
+                    {n}
+                  </span>
+                ))}
+              </span>
+            </>
+          )}
         </div>
 
         {/* Right: name, pronunciation, facts */}

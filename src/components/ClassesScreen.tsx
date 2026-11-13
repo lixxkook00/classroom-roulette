@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type Dispatch, type FormEvent, type ReactNode, type SetStateAction } from 'react'
 import { ELEMENTS, MAX_STUDENTS } from '../data/elements'
 import { LangToggle, useI18n } from '../i18n'
+import { QUALITY_EVENT, qualitySetting, setQualitySetting, quality, type QualitySetting } from '../perf'
 import { viewTransition } from '../util'
 import { ElementSetsPanel } from './ElementSetsPanel'
 import { QuestionSetsPanel } from './QuestionSetsPanel'
@@ -277,6 +278,12 @@ export function ClassesScreen({ data, setData, updateClass, onPlaySet, initialSe
             )}
 
             <div className="backup">
+              <span className="chalk-label">{t('graphics')}</span>
+              <p className="backup__hint">{t('graphicsHint')}</p>
+              <GraphicsSwitch />
+            </div>
+
+            <div className="backup">
               <span className="chalk-label">{t('backup')}</span>
               <p className="backup__hint">{t('backupHint')}</p>
               <div className="row">
@@ -520,6 +527,38 @@ export function ClassesScreen({ data, setData, updateClass, onPlaySet, initialSe
           onClose={() => setImportText(null)}
         />
       )}
+    </div>
+  )
+}
+
+/** Đồ hoạ 3D: auto (measured on this device) / light / full. Takes effect at once. */
+function GraphicsSwitch() {
+  const { t } = useI18n()
+  const [setting, setSetting] = useState<QualitySetting>(qualitySetting)
+  const [effective, setEffective] = useState(quality)
+  useEffect(() => {
+    const on = () => {
+      setSetting(qualitySetting())
+      setEffective(quality())
+    }
+    window.addEventListener(QUALITY_EVENT, on)
+    return () => window.removeEventListener(QUALITY_EVENT, on)
+  }, [])
+  const pick = (v: QualitySetting) => {
+    setQualitySetting(v)
+    setSetting(v)
+    setEffective(quality())
+  }
+  return (
+    <div className="row row--wrap">
+      <div className="seg" role="group" aria-label={t('graphics')}>
+        {(['auto', 'low', 'high'] as const).map((v) => (
+          <button key={v} type="button" className={`seg__btn${setting === v ? ' seg__btn--on' : ''}`} aria-pressed={setting === v} onClick={() => pick(v)}>
+            {t(v === 'auto' ? 'gfxAuto' : v === 'low' ? 'gfxLow' : 'gfxHigh')}
+          </button>
+        ))}
+      </div>
+      {setting === 'auto' && <span className="muted">{t(effective === 'low' ? 'gfxNowLow' : 'gfxNowHigh')}</span>}
     </div>
   )
 }

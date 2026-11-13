@@ -3,7 +3,7 @@ import type { Cond, ElectronConfig, Equation } from '../data/chem'
 import { useI18n } from '../i18n'
 
 /** "Ca(OH)2" → Ca(OH)<sub>2</sub>; a leading number is the coefficient and stays full size. */
-function Species({ text }: { text: string }) {
+export function Species({ text }: { text: string }) {
   const m = /^(\d*)(.*)$/.exec(text)!
   const parts: ReactNode[] = []
   const re = /(\d+)|([^\d]+)/g

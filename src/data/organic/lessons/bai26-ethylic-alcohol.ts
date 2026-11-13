@@ -1,0 +1,321 @@
+import type { Lesson } from '../types'
+
+// KHTN 9 (Kết nối tri thức) — Bài 26. Ethylic alcohol, 3 tiết. Content follows the giáo án (SGK trang 118–122).
+
+export const BAI_26: Lesson = {
+  id: '26',
+  number: { vi: 'Bài 26', en: 'Lesson 26' },
+  title: { vi: 'Ethylic alcohol', en: 'Ethylic alcohol' },
+  sub: { vi: 'Hãy cùng khám phá Bài 26: Ethylic alcohol!', en: 'Let’s explore Lesson 26: Ethylic alcohol!' },
+  badge: 'C2H5OH',
+  molecule: 'ethanol',
+  compare: ['ethane', 'ethanol'],
+  periods: [
+    { vi: 'Công thức, cấu tạo, tính chất vật lí, độ cồn', en: 'Formula, structure, physical properties, alcohol degree' },
+    { vi: 'Tính chất hoá học', en: 'Chemical properties' },
+    { vi: 'Điều chế, ứng dụng, tác hại', en: 'Production, uses, harms' },
+  ],
+  facts: [
+    { label: { vi: 'Công thức phân tử', en: 'Molecular formula' }, value: { vi: 'C2H6O', en: 'C2H6O' } },
+    { label: { vi: 'Công thức cấu tạo thu gọn', en: 'Condensed formula' }, value: { vi: 'CH3–CH2–OH', en: 'CH3–CH2–OH' } },
+    { label: { vi: 'Khối lượng phân tử', en: 'Molar mass' }, value: { vi: '46 amu', en: '46 g/mol' } },
+    { label: { vi: 'Trạng thái, màu', en: 'State, colour' }, value: { vi: 'Chất lỏng, không màu', en: 'Colourless liquid' } },
+    { label: { vi: 'Mùi, vị', en: 'Smell, taste' }, value: { vi: 'Mùi đặc trưng, vị cay', en: 'Distinctive smell, burning taste' } },
+    { label: { vi: 'Nhiệt độ sôi', en: 'Boiling point' }, value: { vi: '78,3 °C', en: '78.3 °C' } },
+    { label: { vi: 'Khối lượng riêng', en: 'Density' }, value: { vi: '0,789 g/mL (20 °C)', en: '0.789 g/mL (20 °C)' } },
+    {
+      label: { vi: 'Tính tan', en: 'Solubility' },
+      value: { vi: 'Tan vô hạn trong nước; hoà tan iodine, benzene…', en: 'Mixes with water in any ratio; dissolves iodine, benzene…' },
+    },
+  ],
+
+  mixer: {
+    kind: 'alcohol-degree',
+    definition: {
+      vi: 'Độ cồn = số mL ethylic alcohol nguyên chất có trong 100 mL dung dịch (ở 20 °C). Kí hiệu X° hoặc X% vol.',
+      en: 'Alcohol degree = mL of pure ethanol in 100 mL of solution (at 20 °C). Written X° or X% vol.',
+    },
+    marks: [
+      { degree: 4, label: { vi: 'Bia (≈ 4% vol)', en: 'Beer (≈ 4% vol)' } },
+      { degree: 14, label: { vi: 'Rượu vang (≈ 14% vol)', en: 'Wine (≈ 14% vol)' } },
+      { degree: 40, label: { vi: 'Rượu mạnh (40% vol)', en: 'Spirits (40% vol)' } },
+      { degree: 70, label: { vi: 'Cồn y tế 70°', en: 'Medical alcohol 70°' } },
+      { degree: 96, label: { vi: 'Cồn 96°', en: 'Alcohol 96°' } },
+    ],
+  },
+
+  reactions: [
+    {
+      id: 'burn',
+      title: { vi: 'Phản ứng cháy', en: 'Burning' },
+      left: 'C2H5OH + 3O2',
+      right: '2CO2 + 3H2O',
+      cond: { vi: 't°', en: 't°' },
+      scene: { kind: 'burn', vessel: 'dish', fuel: 'C2H5OH', products: ['CO2', 'H2O'] },
+      start: { vi: 'Châm lửa bằng que đóm dài', en: 'Light it with a long splint' },
+      hint: {
+        vi: 'Vì sao chai cồn có cảnh báo "để xa nguồn lửa"? Đốt cháy chất chứa C, H, O thì sinh ra chất gì?',
+        en: 'Why do alcohol bottles say “keep away from fire”? What forms when something made of C, H and O burns?',
+      },
+      observe: {
+        vi: 'Ethylic alcohol cháy với ngọn lửa màu xanh nhạt, phản ứng toả nhiều nhiệt.',
+        en: 'Ethanol burns with a pale blue flame and gives off a lot of heat.',
+      },
+      meaning: {
+        vi: 'Dễ cháy, toả nhiều nhiệt → dùng làm nhiên liệu. An toàn: để xa nguồn lửa, chỉ lấy lượng nhỏ, không châm thêm cồn khi đang cháy.',
+        en: 'Burns easily and gives lots of heat → a fuel. Safety: keep away from fire, use small amounts, never add more while it burns.',
+      },
+    },
+    {
+      id: 'sodium',
+      title: { vi: 'Tác dụng với natri', en: 'With sodium' },
+      left: '2C2H5OH + 2Na',
+      right: '2C2H5ONa + H2',
+      scene: {
+        kind: 'tube',
+        liquid: { label: 'C2H5OH', color: 'rgba(127, 200, 232, 0.35)' },
+        solid: { label: 'Na', shape: 'pellet', color: '#b7bdb9', dissolves: true },
+        bubbles: true,
+        splint: true,
+      },
+      start: { vi: 'Thả mẩu natri vào', en: 'Drop in the sodium' },
+      hint: { vi: 'Mẩu natri thay đổi thế nào? Khí gì thoát ra? Nguyên tử H nào bị thay thế?', en: 'What happens to the sodium? Which gas comes off? Which H is replaced?' },
+      observe: {
+        vi: 'Có bọt khí thoát ra, mẩu natri tan dần. Đưa que đóm đang cháy lại gần: khí cháy với tiếng nổ nhỏ → khí H2.',
+        en: 'Bubbles form and the sodium slowly disappears. A burning splint makes a small pop — the gas is H2.',
+      },
+      meaning: {
+        vi: 'Kim loại mạnh như Na, K thay thế nguyên tử H trong nhóm –OH, tạo khí hydrogen. (Dùng ethylic alcohol tuyệt đối.)',
+        en: 'Reactive metals such as Na and K replace the H of the –OH group, releasing hydrogen. (Uses absolute ethanol.)',
+      },
+    },
+    {
+      id: 'ferment',
+      title: { vi: 'Điều chế: lên men', en: 'Making it: fermentation' },
+      left: 'C6H12O6',
+      right: '2C2H5OH + 2CO2',
+      cond: { vi: 'enzyme', en: 'enzyme' },
+      scene: { kind: 'ferment', sugar: 'C6H12O6', gas: 'CO2' },
+      start: { vi: 'Cho men (enzyme) vào', en: 'Add the yeast (enzyme)' },
+      hint: { vi: 'Vì sao quả chín để lâu có mùi rượu? Quả bóng sẽ phồng lên vì khí gì?', en: 'Why does over-ripe fruit smell of alcohol? Which gas will blow up the balloon?' },
+      observe: {
+        vi: 'Dung dịch sủi bọt, quả bóng trên miệng bình phồng dần vì khí CO2.',
+        en: 'The solution fizzes and the balloon slowly fills with CO2.',
+      },
+      meaning: {
+        vi: 'Tinh bột (gạo, ngô, sắn…) → glucose → ethylic alcohol. Còn dùng rỉ đường, rơm rạ, gỗ phế liệu…',
+        en: 'Starch (rice, corn, cassava…) → glucose → ethanol. Molasses, straw and waste wood are also used.',
+      },
+      extra: {
+        left: 'CH2=CH2 + H2O',
+        right: 'C2H5OH',
+        cond: { vi: 't°, H⁺', en: 't°, H⁺' },
+        note: { vi: 'Trong công nghiệp: cộng nước vào ethylene.', en: 'In industry: adding water to ethylene.' },
+      },
+    },
+  ],
+
+  whoReacts: [
+    {
+      question: { vi: 'Chất nào tác dụng được với Na?', en: 'Which of these react with Na?' },
+      items: [
+        { label: 'CH3–CH3', reacts: false, why: { vi: 'Không có nhóm –OH.', en: 'No –OH group.' } },
+        { label: 'CH2=CH2', reacts: false, why: { vi: 'Không có nhóm –OH.', en: 'No –OH group.' } },
+        { label: 'CH3–OH', reacts: true, left: '2CH3OH + 2Na', right: '2CH3ONa + H2', why: { vi: 'Có nhóm –OH.', en: 'Has an –OH group.' } },
+        { label: 'CH3–CH2–OH', reacts: true, left: '2C2H5OH + 2Na', right: '2C2H5ONa + H2', why: { vi: 'Có nhóm –OH.', en: 'Has an –OH group.' } },
+      ],
+    },
+  ],
+
+  quiz: [
+    // ---- Tiết 1
+    {
+      kind: 'mcq',
+      period: 1,
+      text: { vi: 'Nhóm nguyên tử gây nên tính chất đặc trưng của ethylic alcohol là:', en: 'Which group gives ethanol its typical properties?' },
+      options: [{ vi: '–CH3', en: '–CH3' }, { vi: '–CH2–', en: '–CH2–' }, { vi: '–OH', en: '–OH' }, { vi: 'C=C', en: 'C=C' }],
+      answer: 2,
+      why: { vi: 'Nhóm –OH liên kết trực tiếp với nguyên tử carbon.', en: 'The –OH group, bonded directly to a carbon atom.' },
+    },
+    {
+      kind: 'mcq',
+      period: 1,
+      text: { vi: 'Cồn y tế 70° có nghĩa là trong 100 mL cồn có:', en: '70° medical alcohol means 100 mL contains:' },
+      options: [
+        { vi: '70 g ethylic alcohol', en: '70 g of ethanol' },
+        { vi: '70 mL ethylic alcohol nguyên chất', en: '70 mL of pure ethanol' },
+        { vi: '30 mL ethylic alcohol nguyên chất', en: '30 mL of pure ethanol' },
+        { vi: '70 mL nước', en: '70 mL of water' },
+      ],
+      answer: 1,
+      why: { vi: 'Độ cồn tính theo thể tích: mL trong 100 mL dung dịch.', en: 'The degree is by volume: mL per 100 mL of solution.' },
+    },
+    {
+      kind: 'mcq',
+      period: 1,
+      text: { vi: 'Trong 200 mL cồn 70° có bao nhiêu mL ethylic alcohol nguyên chất?', en: 'How much pure ethanol is in 200 mL of 70° alcohol?' },
+      options: [{ vi: '70 mL', en: '70 mL' }, { vi: '140 mL', en: '140 mL' }, { vi: '60 mL', en: '60 mL' }, { vi: '130 mL', en: '130 mL' }],
+      answer: 1,
+      why: { vi: 'V = 200 × 70 : 100 = 140 mL.', en: 'V = 200 × 70 ÷ 100 = 140 mL.' },
+    },
+    {
+      kind: 'mcq',
+      period: 1,
+      text: {
+        vi: 'Chai rượu 40° có thể tích 500 mL. Khối lượng ethylic alcohol nguyên chất trong chai là (D = 0,789 g/mL):',
+        en: 'A 500 mL bottle is 40°. The mass of pure ethanol in it is (D = 0.789 g/mL):',
+      },
+      options: [{ vi: '200 g', en: '200 g' }, { vi: '394,5 g', en: '394.5 g' }, { vi: '157,8 g', en: '157.8 g' }, { vi: '315,6 g', en: '315.6 g' }],
+      answer: 2,
+      why: { vi: 'V = 500 × 40 : 100 = 200 mL; m = 200 × 0,789 = 157,8 g.', en: 'V = 500 × 40 ÷ 100 = 200 mL; m = 200 × 0.789 = 157.8 g.' },
+    },
+    {
+      kind: 'tf',
+      period: 1,
+      text: { vi: 'Ethylic alcohol tan vô hạn trong nước.', en: 'Ethanol mixes with water in any ratio.' },
+      answer: true,
+      why: { vi: 'Đúng — pha với nước theo tỉ lệ nào cũng được.', en: 'Right — any proportion works.' },
+    },
+    {
+      kind: 'tf',
+      period: 1,
+      text: { vi: 'Ethylic alcohol sôi ở 100 °C, giống như nước.', en: 'Ethanol boils at 100 °C, like water.' },
+      answer: false,
+      why: { vi: 'Ethylic alcohol sôi ở 78,3 °C.', en: 'Ethanol boils at 78.3 °C.' },
+    },
+    {
+      kind: 'tf',
+      period: 1,
+      text: { vi: 'Rượu 40% vol nghĩa là có 40 g ethylic alcohol trong 100 mL rượu.', en: '40% vol means 40 g of ethanol per 100 mL.' },
+      answer: false,
+      why: { vi: 'Là 40 mL (theo thể tích), không phải 40 g.', en: 'It is 40 mL (by volume), not 40 g.' },
+    },
+    {
+      kind: 'tf',
+      period: 1,
+      text: { vi: 'Trong phân tử ethylic alcohol, cả 6 nguyên tử H đều liên kết với C.', en: 'All 6 H atoms in ethanol are bonded to C.' },
+      answer: false,
+      why: { vi: 'Chỉ 5 H liên kết với C; 1 H liên kết với O trong nhóm –OH.', en: 'Only 5 are on C; one H is on O in the –OH group.' },
+    },
+    {
+      kind: 'tf',
+      period: 1,
+      text: { vi: 'Ethylic alcohol nặng hơn nước.', en: 'Ethanol is denser than water.' },
+      answer: false,
+      why: { vi: 'D = 0,789 g/mL, nhẹ hơn nước (1 g/mL).', en: 'D = 0.789 g/mL, lighter than water (1 g/mL).' },
+    },
+    {
+      kind: 'tf',
+      period: 1,
+      text: { vi: 'Nước rửa tay sát khuẩn thường chứa 60–85% ethylic alcohol về thể tích.', en: 'Hand sanitiser usually contains 60–85% ethanol by volume.' },
+      answer: true,
+      why: { vi: 'Đúng — mục "Em có biết" trong SGK.', en: 'Right — from the “Did you know” box.' },
+    },
+    // ---- Tiết 2
+    {
+      kind: 'mcq',
+      period: 2,
+      text: { vi: 'Sản phẩm khi đốt cháy hoàn toàn ethylic alcohol là:', en: 'Burning ethanol completely gives:' },
+      options: [{ vi: 'CO và H2O', en: 'CO and H2O' }, { vi: 'CO2 và H2', en: 'CO2 and H2' }, { vi: 'CO2 và H2O', en: 'CO2 and H2O' }, { vi: 'C và H2O', en: 'C and H2O' }],
+      answer: 2,
+      why: { vi: 'C2H5OH + 3O2 → 2CO2 + 3H2O.', en: 'C2H5OH + 3O2 → 2CO2 + 3H2O.' },
+    },
+    {
+      kind: 'mcq',
+      period: 2,
+      text: { vi: 'Khí sinh ra khi cho natri vào ethylic alcohol tuyệt đối là:', en: 'Sodium in absolute ethanol gives off:' },
+      options: [{ vi: 'O2', en: 'O2' }, { vi: 'H2', en: 'H2' }, { vi: 'CO2', en: 'CO2' }, { vi: 'CH4', en: 'CH4' }],
+      answer: 1,
+      why: { vi: '2C2H5OH + 2Na → 2C2H5ONa + H2.', en: '2C2H5OH + 2Na → 2C2H5ONa + H2.' },
+    },
+    {
+      kind: 'mcq',
+      period: 2,
+      text: { vi: 'Đốt cháy hoàn toàn 0,1 mol C2H5OH cần bao nhiêu mol O2?', en: 'Burning 0.1 mol of C2H5OH needs how many mol of O2?' },
+      options: [{ vi: '0,1 mol', en: '0.1 mol' }, { vi: '0,2 mol', en: '0.2 mol' }, { vi: '0,3 mol', en: '0.3 mol' }, { vi: '0,6 mol', en: '0.6 mol' }],
+      answer: 2,
+      why: { vi: 'n(O2) = 3 × 0,1 = 0,3 mol; n(CO2) = 2 × 0,1 = 0,2 mol.', en: 'n(O2) = 3 × 0.1 = 0.3 mol; n(CO2) = 2 × 0.1 = 0.2 mol.' },
+    },
+    {
+      kind: 'tf',
+      period: 2,
+      text: { vi: 'Ethylic alcohol cháy với ngọn lửa màu xanh nhạt và toả nhiều nhiệt.', en: 'Ethanol burns with a pale blue flame and gives off lots of heat.' },
+      answer: true,
+      why: { vi: 'Đúng — nên được dùng làm nhiên liệu.', en: 'Right — so it is used as a fuel.' },
+    },
+    {
+      kind: 'tf',
+      period: 2,
+      text: { vi: 'Bếp cồn lửa nhỏ thì có thể rót thêm cồn khi bếp đang cháy.', en: 'If an alcohol stove burns low, you can top it up while it is burning.' },
+      answer: false,
+      why: { vi: 'Nguy hiểm: cồn dễ bay hơi, dễ cháy, gây bùng cháy. Tắt lửa, chờ nguội rồi mới thêm.', en: 'Dangerous: it can flare up. Put it out, let it cool, then refill.' },
+    },
+    {
+      kind: 'tf',
+      period: 2,
+      text: { vi: 'Natri tác dụng với ethylic alcohol giải phóng khí oxygen.', en: 'Sodium reacts with ethanol and releases oxygen.' },
+      answer: false,
+      why: { vi: 'Khí thoát ra là hydrogen (H2).', en: 'The gas is hydrogen (H2).' },
+    },
+    // ---- Tiết 3
+    {
+      kind: 'mcq',
+      period: 3,
+      text: { vi: 'Nguyên liệu dùng để sản xuất ethylic alcohol bằng phương pháp lên men là:', en: 'Which raw materials are fermented to make ethanol?' },
+      options: [{ vi: 'Đá vôi', en: 'Limestone' }, { vi: 'Muối ăn', en: 'Table salt' }, { vi: 'Gạo, ngô, sắn', en: 'Rice, corn, cassava' }, { vi: 'Cát', en: 'Sand' }],
+      answer: 2,
+      why: { vi: 'Tinh bột → glucose → ethylic alcohol.', en: 'Starch → glucose → ethanol.' },
+    },
+    {
+      kind: 'mcq',
+      period: 3,
+      text: { vi: 'Ethylic alcohol được dùng làm nhiên liệu vì:', en: 'Ethanol is used as a fuel because it:' },
+      options: [
+        { vi: 'Tan vô hạn trong nước', en: 'Mixes with water' },
+        { vi: 'Dễ cháy, toả nhiều nhiệt', en: 'Burns easily, gives lots of heat' },
+        { vi: 'Là chất lỏng không màu', en: 'Is a colourless liquid' },
+        { vi: 'Có mùi đặc trưng', en: 'Has a distinctive smell' },
+      ],
+      answer: 1,
+      why: { vi: 'Ứng dụng dựa vào tính chất: dễ cháy, toả nhiều nhiệt.', en: 'Use follows property: burns easily, lots of heat.' },
+    },
+    {
+      kind: 'mcq',
+      period: 3,
+      text: { vi: 'Phát biểu đúng về việc lạm dụng rượu, bia là:', en: 'Which is true about alcohol abuse?' },
+      options: [
+        { vi: 'Giúp lái xe an toàn hơn', en: 'It makes driving safer' },
+        { vi: 'Không ảnh hưởng đến hệ thần kinh', en: 'It does not affect the nervous system' },
+        { vi: 'Có thể gây viêm gan, tăng huyết áp', en: 'It can cause hepatitis and high blood pressure' },
+        { vi: 'Tốt cho học sinh đang phát triển', en: 'It is good for growing students' },
+      ],
+      answer: 2,
+      why: {
+        vi: 'Lạm dụng rượu, bia gây viêm gan, viêm loét dạ dày, tăng huyết áp, tổn thương thần kinh… và là nguyên nhân của nhiều tai nạn giao thông.',
+        en: 'Alcohol abuse causes liver and stomach disease, high blood pressure, nerve damage… and many road accidents.',
+      },
+    },
+    {
+      kind: 'mcq',
+      period: 3,
+      text: { vi: 'Xe máy đổ 4 lít xăng E5 (5% ethylic alcohol về thể tích). Thể tích ethylic alcohol là:', en: 'A motorbike takes 4 L of E5 (5% ethanol by volume). How much ethanol is that?' },
+      options: [{ vi: '0,2 lít', en: '0.2 L' }, { vi: '0,5 lít', en: '0.5 L' }, { vi: '2 lít', en: '2 L' }, { vi: '0,02 lít', en: '0.02 L' }],
+      answer: 0,
+      why: { vi: 'V = 4 × 5 : 100 = 0,2 lít.', en: 'V = 4 × 5 ÷ 100 = 0.2 L.' },
+    },
+    {
+      kind: 'tf',
+      period: 3,
+      text: { vi: 'Có thể điều chế ethylic alcohol bằng cách cộng nước vào ethylene.', en: 'Ethanol can be made by adding water to ethylene.' },
+      answer: true,
+      why: { vi: 'CH2=CH2 + H2O → C2H5OH (t°, H⁺) — phương pháp trong công nghiệp.', en: 'CH2=CH2 + H2O → C2H5OH (t°, H⁺) — the industrial method.' },
+    },
+    {
+      kind: 'tf',
+      period: 3,
+      text: { vi: 'Pháp luật cấm người chưa đủ 18 tuổi uống rượu, bia.', en: 'The law forbids under-18s from drinking alcohol.' },
+      answer: true,
+      why: { vi: 'Đúng — và rượu, bia có hại cho cơ thể đang phát triển.', en: 'Right — and alcohol harms a growing body.' },
+    },
+  ],
+}

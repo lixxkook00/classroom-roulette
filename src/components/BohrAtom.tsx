@@ -25,6 +25,10 @@ export function BohrAtom({ z, symbol, size = 260 }: Props) {
           <stop offset="55%" stopColor="var(--c, #f6e27a)" />
           <stop offset="100%" stopColor="rgba(0,0,0,0.35)" />
         </radialGradient>
+        <radialGradient id="bohr-halo">
+          <stop offset="55%" stopColor="var(--c, #f6e27a)" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="var(--c, #f6e27a)" stopOpacity="0" />
+        </radialGradient>
         <radialGradient id="bohr-glow">
           <stop offset="0%" stopColor="var(--c, #f6e27a)" stopOpacity="0.35" />
           <stop offset="100%" stopColor="var(--c, #f6e27a)" stopOpacity="0" />
@@ -40,12 +44,21 @@ export function BohrAtom({ z, symbol, size = 260 }: Props) {
             <g className="bohr__shell" style={{ animationDuration: `${dur}s`, animationDirection: i % 2 ? 'reverse' : 'normal', transformOrigin: `${c}px ${c}px` }}>
               {Array.from({ length: n }, (_, k) => {
                 const a = (k / n) * Math.PI * 2 + i * 0.4
-                return <circle key={k} cx={c + r * Math.cos(a)} cy={c + r * Math.sin(a)} r={dot} className="bohr__e" />
+                const x = c + r * Math.cos(a)
+                const y = c + r * Math.sin(a)
+                // A plain halo instead of a drop-shadow filter: filters on spinning shapes are redrawn every frame.
+                return (
+                  <g key={k}>
+                    <circle cx={x} cy={y} r={dot * 1.9} className="bohr__halo" />
+                    <circle cx={x} cy={y} r={dot} className="bohr__e" />
+                  </g>
+                )
               })}
             </g>
           </g>
         )
       })}
+      <circle cx={c} cy={c} r={nucleus * 1.45} fill="url(#bohr-halo)" />
       <circle cx={c} cy={c} r={nucleus} fill="url(#bohr-nuc)" className="bohr__nucleus" />
       <text x={c} y={c} className="bohr__sym" fontSize={nucleus * 0.95} textAnchor="middle" dominantBaseline="central">
         {symbol}

@@ -56,7 +56,9 @@ export function QuestionStage({ element, order, studentName, className, info, on
   }, [revealedFor, q.id])
 
   useEffect(() => {
-    checkRef.current?.focus({ preventScroll: true })
+    // Focus after the popup has painted: focusing forces a layout that would delay its first frame.
+    const raf = requestAnimationFrame(() => checkRef.current?.focus({ preventScroll: true }))
+    return () => cancelAnimationFrame(raf)
   }, [q.id])
 
   const reveal = () => {

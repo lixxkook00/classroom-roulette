@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useI18n } from '../i18n'
 import { playCorrect, playWrong } from '../sound'
+import { perfFlags } from '../perf'
 import { prefersReducedMotion } from '../util'
 
 interface Props {
@@ -53,7 +54,9 @@ export function Celebration({ kind, studentName, sound, onDone }: Props) {
     const ctx = canvas?.getContext('2d')
     if (!canvas || !ctx || reduced) return () => window.clearTimeout(end)
 
-    const dpr = Math.min(2, window.devicePixelRatio || 1)
+    const perf = perfFlags(2)
+    const dpr = perf.dpr
+    const k = perf.particles
     const W = window.innerWidth
     const H = window.innerHeight
     canvas.width = W * dpr
@@ -66,7 +69,7 @@ export function Celebration({ kind, studentName, sound, onDone }: Props) {
     let raf = 0
 
     const burst = (x: number, y: number, color: string, n = 70) => {
-      for (let i = 0; i < n; i++) {
+      for (let i = 0; i < Math.round(n * k); i++) {
         const a = Math.random() * Math.PI * 2
         const sp = 1.5 + Math.random() * 5.5
         sparks.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: 55 + Math.random() * 40, color: Math.random() < 0.75 ? color : '#ffffff', size: 1.5 + Math.random() * 2 })
@@ -74,7 +77,7 @@ export function Celebration({ kind, studentName, sound, onDone }: Props) {
     }
 
     if (kind === 'correct') {
-      for (let i = 0; i < 9; i++) {
+      for (let i = 0; i < Math.round(9 * Math.max(0.6, k)); i++) {
         rockets.push({
           x: W * (0.12 + Math.random() * 0.76),
           y: H + 10,
@@ -86,7 +89,7 @@ export function Celebration({ kind, studentName, sound, onDone }: Props) {
         })
       }
       // Confetti rain straight away
-      for (let i = 0; i < 90; i++) {
+      for (let i = 0; i < Math.round(90 * k); i++) {
         sparks.push({ x: Math.random() * W, y: -20 - Math.random() * H * 0.4, vx: (Math.random() - 0.5) * 1.5, vy: 1 + Math.random() * 2.5, life: 0, max: 220, color: COLORS[i % COLORS.length], size: 3 + Math.random() * 3 })
       }
     }

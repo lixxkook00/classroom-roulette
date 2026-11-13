@@ -1,13 +1,15 @@
-import { useCallback, useMemo, useState, type FormEvent } from 'react'
+import { Suspense, lazy, useCallback, useMemo, useState, type FormEvent } from 'react'
 import { fold, resolveGuess } from '../data/chem'
 import { CATEGORY_ORDER, ELEMENTS, type Category, type Element } from '../data/elements'
 import { NAME_VI_EXTRA } from '../data/facts.vi'
 import { useI18n } from '../i18n'
 import { QrIcon } from './chemText'
 import { ElementDetail } from './ElementDetail'
-import { QrDialog } from './QrDialog'
 import { studentUrl } from '../util'
 import { PeriodicTable, type CellState } from './PeriodicTable'
+
+// QR codes need the `qrcode` library only when a teacher opens the dialog.
+const QrDialog = lazy(() => import('./QrDialog').then((m) => ({ default: m.QrDialog })))
 
 /** Does a search box query match this element? (number, symbol, English or Vietnamese name, no accents needed) */
 function matches(el: Element, q: string): boolean {
@@ -114,7 +116,11 @@ export function ExploreScreen({ canShare }: { canShare: boolean }) {
       </main>
 
       {selected !== null && <ElementDetail z={selected} onClose={close} onNavigate={setSelected} />}
-      {qrOpen && <QrDialog title={t('qrTable')} url={studentUrl('table')} onClose={() => setQrOpen(false)} />}
+      {qrOpen && (
+        <Suspense fallback={null}>
+          <QrDialog title={t('qrTable')} url={studentUrl('table')} onClose={() => setQrOpen(false)} />
+        </Suspense>
+      )}
     </div>
   )
 }

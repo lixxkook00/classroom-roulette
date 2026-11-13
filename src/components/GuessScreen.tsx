@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { electronConfig, maskFact, matterState, resolveGuess } from '../data/chem'
 import { ELEMENTS } from '../data/elements'
 import { useI18n } from '../i18n'
@@ -9,8 +9,10 @@ import type { ElementSet } from '../store'
 import { isTypingSpace, randomInt } from '../util'
 import { ConfigView, QrIcon, SpeakerIcon } from './chemText'
 import { ChalkSelect } from './controls'
-import { QrDialog } from './QrDialog'
 import { studentUrl } from '../util'
+
+// QR codes need the `qrcode` library only when a teacher opens the dialog.
+const QrDialog = lazy(() => import('./QrDialog').then((m) => ({ default: m.QrDialog })))
 
 /** A set that came in through a shared link / QR code. */
 export interface SharedSet {
@@ -354,7 +356,11 @@ export function GuessScreen({ sets, shared, initialSetId, canShare }: Props) {
           </div>
         </div>
       </main>
-      {qrOpen && <QrDialog title={t('qrGuess')} url={shareUrl()} onClose={() => setQrOpen(false)} />}
+      {qrOpen && (
+        <Suspense fallback={null}>
+          <QrDialog title={t('qrGuess')} url={shareUrl()} onClose={() => setQrOpen(false)} />
+        </Suspense>
+      )}
     </div>
   )
 }

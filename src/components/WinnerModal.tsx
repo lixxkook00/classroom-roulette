@@ -52,7 +52,8 @@ export function WinnerModal({
 
   useEffect(() => {
     // preventScroll: on small screens the card scrolls; keep it at the top so the name shows first.
-    primaryRef.current?.focus({ preventScroll: true })
+    // Focus after the popup has painted: focusing forces a layout that would delay its first frame.
+    const raf = requestAnimationFrame(() => primaryRef.current?.focus({ preventScroll: true }))
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()
@@ -60,7 +61,10 @@ export function WinnerModal({
       }
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('keydown', onKey)
+    }
   }, [onClose])
 
   // The card morphs into the question view: the name glides to the top-left, the box grows.
